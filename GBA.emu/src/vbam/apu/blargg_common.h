@@ -5,13 +5,10 @@
 #ifndef BLARGG_COMMON_H
 #define BLARGG_COMMON_H
 
-#define VBAM_NO_GB
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
-#include <util/builtins.h>
 
 #undef BLARGG_COMMON_H
 // allow blargg_config.h to #include blargg_common.h
@@ -46,10 +43,10 @@
 // blargg_vector - very lightweight vector of POD types (no constructor/destructor)
 template<class T>
 class blargg_vector {
-	T* begin_ = nullptr;
-	size_t size_ = 0;
+	T* begin_;
+	size_t size_;
 public:
-	constexpr blargg_vector() { }
+	blargg_vector() : begin_( 0 ), size_( 0 ) { }
 	~blargg_vector() { free( begin_ ); }
 	size_t size() const { return size_; }
 	T* begin() const { return begin_; }

@@ -33,9 +33,6 @@ unprefixed names. */
 static inline void blargg_dprintf_( const char*, ... ) { }
 #undef  dprintf
 #define dprintf (1) ? (void) 0 : blargg_dprintf_
-/*#define BLARGG_EXPORT
-int const blargg_ok = 0;
-#define ACK_FAILURE()*/
 
 // If expr is false, prints file and line number to debug console/log, then
 // continues execution normally. Meant for flagging potential problems or things

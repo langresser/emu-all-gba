@@ -7,7 +7,7 @@
 #include "GBAinline.h"
 #include "Globals.h"
 
-static const s16 sineTable[256] = {
+s16 sineTable[256] = {
   (s16)0x0000, (s16)0x0192, (s16)0x0323, (s16)0x04B5, (s16)0x0645, (s16)0x07D5, (s16)0x0964, (s16)0x0AF1,
   (s16)0x0C7C, (s16)0x0E05, (s16)0x0F8C, (s16)0x1111, (s16)0x1294, (s16)0x1413, (s16)0x158F, (s16)0x1708,
   (s16)0x187D, (s16)0x19EF, (s16)0x1B5D, (s16)0x1CC6, (s16)0x1E2B, (s16)0x1F8B, (s16)0x20E7, (s16)0x223D,
@@ -42,9 +42,8 @@ static const s16 sineTable[256] = {
   (s16)0xF384, (s16)0xF50F, (s16)0xF69C, (s16)0xF82B, (s16)0xF9BB, (s16)0xFB4B, (s16)0xFCDD, (s16)0xFE6E
 };
 
-void BIOS_ArcTan(ARM7TDMI &cpu)
+void BIOS_ArcTan()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("ArcTan: %08x (VCOUNT=%2d)\n",
@@ -72,9 +71,8 @@ void BIOS_ArcTan(ARM7TDMI &cpu)
 #endif
 }
 
-void BIOS_ArcTan2(ARM7TDMI &cpu)
+void BIOS_ArcTan2()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("ArcTan2: %08x,%08x (VCOUNT=%2d)\n",
@@ -96,16 +94,16 @@ void BIOS_ArcTan2(ARM7TDMI &cpu)
 		if ((abs(x) > abs(y)) || ((abs(x) == abs(y)) && (!((x<0) && (y<0))))) {
         reg[1].I = x;
         reg[0].I = y << 14;
-        BIOS_Div(cpu);
-        BIOS_ArcTan(cpu);
+        BIOS_Div();
+        BIOS_ArcTan();
         if (x < 0)
           res = 0x8000 + reg[0].I;
         else
           res = (((y>>16) & 0x8000)<<1) + reg[0].I;
       } else {
         reg[0].I = x << 14;
-        BIOS_Div(cpu);
-        BIOS_ArcTan(cpu);
+        BIOS_Div();
+        BIOS_ArcTan();
         res = (0x4000 + ((y>>16) & 0x8000)) - reg[0].I;
       }
     }
@@ -120,9 +118,8 @@ void BIOS_ArcTan2(ARM7TDMI &cpu)
 #endif
 }
 
-void BIOS_BitUnPack(ARM7TDMI &cpu)
+void BIOS_BitUnPack()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("BitUnPack: %08x,%08x,%08x (VCOUNT=%2d)\n",
@@ -137,19 +134,19 @@ void BIOS_BitUnPack(ARM7TDMI &cpu)
   u32 dest = reg[1].I;
   u32 header = reg[2].I;
 
-  int len = CPUReadHalfWord(cpu, header);
+  int len = CPUReadHalfWord(header);
     // check address
   if(((source & 0xe000000) == 0) ||
      ((source + len) & 0xe000000) == 0)
     return;
 
-  int bits = CPUReadByte(cpu, header+2);
+  int bits = CPUReadByte(header+2);
   int revbits = 8 - bits;
   // u32 value = 0;
-  u32 base = CPUReadMemory(cpu, header+4);
+  u32 base = CPUReadMemory(header+4);
   bool addBase = (base & 0x80000000) ? true : false;
   base &= 0x7fffffff;
-  int dataSize = CPUReadByte(cpu, header+3);
+  int dataSize = CPUReadByte(header+3);
 
   int data = 0;
   int bitwritecount = 0;
@@ -158,7 +155,7 @@ void BIOS_BitUnPack(ARM7TDMI &cpu)
     if(len < 0)
       break;
     int mask = 0xff >> revbits;
-    u8 b = CPUReadByte(cpu, source);
+    u8 b = CPUReadByte(source);
     source++;
     int bitcount = 0;
     while(1) {
@@ -172,7 +169,7 @@ void BIOS_BitUnPack(ARM7TDMI &cpu)
       data |= temp << bitwritecount;
       bitwritecount += dataSize;
       if(bitwritecount >= 32) {
-        CPUWriteMemory(cpu, dest, data);
+        CPUWriteMemory(dest, data);
         dest += 4;
         data = 0;
         bitwritecount = 0;
@@ -183,14 +180,13 @@ void BIOS_BitUnPack(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_GetBiosChecksum(ARM7TDMI &cpu)
+void BIOS_GetBiosChecksum()
 {
-  cpu.reg[0].I=0xBAAE187F;
+  reg[0].I=0xBAAE187F;
 }
 
-void BIOS_BgAffineSet(ARM7TDMI &cpu)
+void BIOS_BgAffineSet()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("BgAffineSet: %08x,%08x,%08x (VCOUNT=%2d)\n",
@@ -206,19 +202,19 @@ void BIOS_BgAffineSet(ARM7TDMI &cpu)
   int num = reg[2].I;
 
   for(int i = 0; i < num; i++) {
-    s32 cx = CPUReadMemory(cpu, src);
+    s32 cx = CPUReadMemory(src);
     src+=4;
-    s32 cy = CPUReadMemory(cpu, src);
+    s32 cy = CPUReadMemory(src);
     src+=4;
-    s16 dispx = CPUReadHalfWord(cpu, src);
+    s16 dispx = CPUReadHalfWord(src);
     src+=2;
-    s16 dispy = CPUReadHalfWord(cpu, src);
+    s16 dispy = CPUReadHalfWord(src);
     src+=2;
-    s16 rx = CPUReadHalfWord(cpu, src);
+    s16 rx = CPUReadHalfWord(src);
     src+=2;
-    s16 ry = CPUReadHalfWord(cpu, src);
+    s16 ry = CPUReadHalfWord(src);
     src+=2;
-    u16 theta = CPUReadHalfWord(cpu, src)>>8;
+    u16 theta = CPUReadHalfWord(src)>>8;
     src+=4; // keep structure alignment
     s32 a = sineTable[(theta+0x40)&255];
     s32 b = sineTable[theta];
@@ -228,28 +224,27 @@ void BIOS_BgAffineSet(ARM7TDMI &cpu)
     s16 dy =  (ry * b)>>14;
     s16 dmy = (ry * a)>>14;
 
-    CPUWriteHalfWord(cpu, dest, dx);
+    CPUWriteHalfWord(dest, dx);
     dest += 2;
-    CPUWriteHalfWord(cpu, dest, -dmx);
+    CPUWriteHalfWord(dest, -dmx);
     dest += 2;
-    CPUWriteHalfWord(cpu, dest, dy);
+    CPUWriteHalfWord(dest, dy);
     dest += 2;
-    CPUWriteHalfWord(cpu, dest, dmy);
+    CPUWriteHalfWord(dest, dmy);
     dest += 2;
 
     s32 startx = cx - dx * dispx + dmx * dispy;
     s32 starty = cy - dy * dispx - dmy * dispy;
 
-    CPUWriteMemory(cpu, dest, startx);
+    CPUWriteMemory(dest, startx);
     dest += 4;
-    CPUWriteMemory(cpu, dest, starty);
+    CPUWriteMemory(dest, starty);
     dest += 4;
   }
 }
 
-void BIOS_CpuSet(ARM7TDMI &cpu)
+void BIOS_CpuSet()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("CpuSet: 0x%08x,0x%08x,0x%08x (VCOUNT=%d)\n", reg[0].I, reg[1].I,
@@ -274,16 +269,16 @@ void BIOS_CpuSet(ARM7TDMI &cpu)
     dest &= 0xFFFFFFFC;
     // fill ?
     if((cnt >> 24) & 1) {
-        u32 value = (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(cpu, source));
+        u32 value = (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(source));
       while(count) {
-        CPUWriteMemory(cpu, dest, value);
+        CPUWriteMemory(dest, value);
         dest += 4;
         count--;
       }
     } else {
       // copy
       while(count) {
-        CPUWriteMemory(cpu, dest, (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(cpu, source)));
+        CPUWriteMemory(dest, (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(source)));
         source += 4;
         dest += 4;
         count--;
@@ -292,16 +287,16 @@ void BIOS_CpuSet(ARM7TDMI &cpu)
   } else {
     // 16-bit fill?
     if((cnt >> 24) & 1) {
-      u16 value = (source>0x0EFFFFFF ? 0x1CAD : CPUReadHalfWord(cpu, source));
+      u16 value = (source>0x0EFFFFFF ? 0x1CAD : CPUReadHalfWord(source));
       while(count) {
-        CPUWriteHalfWord(cpu, dest, value);
+        CPUWriteHalfWord(dest, value);
         dest += 2;
         count--;
       }
     } else {
       // copy
       while(count) {
-        CPUWriteHalfWord(cpu, dest, (source>0x0EFFFFFF ? 0x1CAD : CPUReadHalfWord(cpu, source)));
+        CPUWriteHalfWord(dest, (source>0x0EFFFFFF ? 0x1CAD : CPUReadHalfWord(source)));
         source += 2;
         dest += 2;
         count--;
@@ -310,9 +305,8 @@ void BIOS_CpuSet(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_CpuFastSet(ARM7TDMI &cpu)
+void BIOS_CpuFastSet()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("CpuFastSet: 0x%08x,0x%08x,0x%08x (VCOUNT=%d)\n", reg[0].I, reg[1].I,
@@ -338,9 +332,9 @@ void BIOS_CpuFastSet(ARM7TDMI &cpu)
   if((cnt >> 24) & 1) {
     while(count > 0) {
       // BIOS always transfers 32 bytes at a time
-      u32 value = (source>0x0EFFFFFF ? 0xBAFFFFFB : CPUReadMemory(cpu, source));
+      u32 value = (source>0x0EFFFFFF ? 0xBAFFFFFB : CPUReadMemory(source));
       for(int i = 0; i < 8; i++) {
-        CPUWriteMemory(cpu, dest, value);
+        CPUWriteMemory(dest, value);
         dest += 4;
       }
       count -= 8;
@@ -350,7 +344,7 @@ void BIOS_CpuFastSet(ARM7TDMI &cpu)
     while(count > 0) {
       // BIOS always transfers 32 bytes at a time
       for(int i = 0; i < 8; i++) {
-        CPUWriteMemory(cpu, dest, (source>0x0EFFFFFF ? 0xBAFFFFFB :CPUReadMemory(cpu, source)));
+        CPUWriteMemory(dest, (source>0x0EFFFFFF ? 0xBAFFFFFB :CPUReadMemory(source)));
         source += 4;
         dest += 4;
       }
@@ -359,9 +353,8 @@ void BIOS_CpuFastSet(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_Diff8bitUnFilterWram(ARM7TDMI &cpu)
+void BIOS_Diff8bitUnFilterWram()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("Diff8bitUnFilterWram: 0x%08x,0x%08x (VCOUNT=%d)\n", reg[0].I,
@@ -372,7 +365,7 @@ void BIOS_Diff8bitUnFilterWram(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source);
+  u32 header = CPUReadMemory(source);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -381,21 +374,20 @@ void BIOS_Diff8bitUnFilterWram(ARM7TDMI &cpu)
 
   int len = header >> 8;
 
-  u8 data = CPUReadByte(cpu, source++);
-  CPUWriteByte(cpu, dest++, data);
+  u8 data = CPUReadByte(source++);
+  CPUWriteByte(dest++, data);
   len--;
 
   while(len > 0) {
-    u8 diff = CPUReadByte(cpu, source++);
+    u8 diff = CPUReadByte(source++);
     data += diff;
-    CPUWriteByte(cpu, dest++, data);
+    CPUWriteByte(dest++, data);
     len--;
   }
 }
 
-void BIOS_Diff8bitUnFilterVram(ARM7TDMI &cpu)
+void BIOS_Diff8bitUnFilterVram()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("Diff8bitUnFilterVram: 0x%08x,0x%08x (VCOUNT=%d)\n", reg[0].I,
@@ -406,7 +398,7 @@ void BIOS_Diff8bitUnFilterVram(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source);
+  u32 header = CPUReadMemory(source);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -415,19 +407,19 @@ void BIOS_Diff8bitUnFilterVram(ARM7TDMI &cpu)
 
   int len = header >> 8;
 
-  u8 data = CPUReadByte(cpu, source++);
+  u8 data = CPUReadByte(source++);
   u16 writeData = data;
   int shift = 8;
   int bytes = 1;
 
   while(len >= 2) {
-    u8 diff = CPUReadByte(cpu, source++);
+    u8 diff = CPUReadByte(source++);
     data += diff;
     writeData |= (data << shift);
     bytes++;
     shift += 8;
     if(bytes == 2) {
-      CPUWriteHalfWord(cpu, dest, writeData);
+      CPUWriteHalfWord(dest, writeData);
       dest += 2;
       len -= 2;
       bytes = 0;
@@ -437,9 +429,8 @@ void BIOS_Diff8bitUnFilterVram(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_Diff16bitUnFilter(ARM7TDMI &cpu)
+void BIOS_Diff16bitUnFilter()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("Diff16bitUnFilter: 0x%08x,0x%08x (VCOUNT=%d)\n", reg[0].I,
@@ -450,7 +441,7 @@ void BIOS_Diff16bitUnFilter(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source);
+  u32 header = CPUReadMemory(source);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -459,25 +450,24 @@ void BIOS_Diff16bitUnFilter(ARM7TDMI &cpu)
 
   int len = header >> 8;
 
-  u16 data = CPUReadHalfWord(cpu, source);
+  u16 data = CPUReadHalfWord(source);
   source += 2;
-  CPUWriteHalfWord(cpu, dest, data);
+  CPUWriteHalfWord(dest, data);
   dest += 2;
   len -= 2;
 
   while(len >= 2) {
-    u16 diff = CPUReadHalfWord(cpu, source);
+    u16 diff = CPUReadHalfWord(source);
     source += 2;
     data += diff;
-    CPUWriteHalfWord(cpu, dest, data);
+    CPUWriteHalfWord(dest, data);
     dest += 2;
     len -= 2;
   }
 }
 
-void BIOS_Div(ARM7TDMI &cpu)
+void BIOS_Div()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("Div: 0x%08x,0x%08x (VCOUNT=%d)\n",
@@ -506,9 +496,8 @@ void BIOS_Div(ARM7TDMI &cpu)
 #endif
 }
 
-void BIOS_DivARM(ARM7TDMI &cpu)
+void BIOS_DivARM()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("DivARM: 0x%08x, (VCOUNT=%d)\n",
@@ -520,12 +509,11 @@ void BIOS_DivARM(ARM7TDMI &cpu)
   u32 temp = reg[0].I;
   reg[0].I = reg[1].I;
   reg[1].I = temp;
-  BIOS_Div(cpu);
+  BIOS_Div();
 }
 
-void BIOS_HuffUnComp(ARM7TDMI &cpu)
+void BIOS_HuffUnComp()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("HuffUnComp: 0x%08x,0x%08x (VCOUNT=%d)\n",
@@ -538,14 +526,14 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source);
+  u32 header = CPUReadMemory(source);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
      ((source + ((header >> 8) & 0x1fffff)) & 0xe000000) == 0)
     return;
 
-  u8 treeSize = CPUReadByte(cpu, source++);
+  u8 treeSize = CPUReadByte(source++);
 
   u32 treeStart = source;
 
@@ -554,11 +542,11 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
   int len = header >> 8;
 
   u32 mask = 0x80000000;
-  u32 data = CPUReadMemory(cpu, source);
+  u32 data = CPUReadMemory(source);
   source += 4;
 
   int pos = 0;
-  u8 rootNode = CPUReadByte(cpu, treeStart);
+  u8 rootNode = CPUReadByte(treeStart);
   u8 currentNode = rootNode;
   bool writeData = false;
   int byteShift = 0;
@@ -577,12 +565,12 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
         // right
         if(currentNode & 0x40)
           writeData = true;
-        currentNode = CPUReadByte(cpu, treeStart+pos+1);
+        currentNode = CPUReadByte(treeStart+pos+1);
       } else {
         // left
         if(currentNode & 0x80)
           writeData = true;
-        currentNode = CPUReadByte(cpu, treeStart+pos);
+        currentNode = CPUReadByte(treeStart+pos);
       }
 
       if(writeData) {
@@ -597,7 +585,7 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
         if(byteCount == 4) {
           byteCount = 0;
           byteShift = 0;
-          CPUWriteMemory(cpu, dest, writeValue);
+          CPUWriteMemory(dest, writeValue);
           writeValue = 0;
           dest += 4;
           len -= 4;
@@ -606,7 +594,7 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
       mask >>= 1;
       if(mask == 0) {
         mask = 0x80000000;
-        data = CPUReadMemory(cpu, source);
+        data = CPUReadMemory(source);
         source += 4;
       }
     }
@@ -624,12 +612,12 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
         // right
         if(currentNode & 0x40)
           writeData = true;
-        currentNode = CPUReadByte(cpu, treeStart+pos+1);
+        currentNode = CPUReadByte(treeStart+pos+1);
       } else {
         // left
         if(currentNode & 0x80)
           writeData = true;
-        currentNode = CPUReadByte(cpu, treeStart+pos);
+        currentNode = CPUReadByte(treeStart+pos);
       }
 
       if(writeData) {
@@ -650,7 +638,7 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
           if(byteCount == 4) {
             byteCount = 0;
             byteShift = 0;
-            CPUWriteMemory(cpu, dest, writeValue);
+            CPUWriteMemory(dest, writeValue);
             dest += 4;
             writeValue = 0;
             len -= 4;
@@ -663,16 +651,15 @@ void BIOS_HuffUnComp(ARM7TDMI &cpu)
       mask >>= 1;
       if(mask == 0) {
         mask = 0x80000000;
-        data = CPUReadMemory(cpu, source);
+        data = CPUReadMemory(source);
         source += 4;
       }
     }
   }
 }
 
-void BIOS_LZ77UnCompVram(ARM7TDMI &cpu)
+void BIOS_LZ77UnCompVram()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("LZ77UnCompVram: 0x%08x,0x%08x (VCOUNT=%d)\n",
@@ -685,7 +672,7 @@ void BIOS_LZ77UnCompVram(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source);
+  u32 header = CPUReadMemory(source);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -699,23 +686,23 @@ void BIOS_LZ77UnCompVram(ARM7TDMI &cpu)
   int len = header >> 8;
 
   while(len > 0) {
-    u8 d = CPUReadByte(cpu, source++);
+    u8 d = CPUReadByte(source++);
 
     if(d) {
       for(int i = 0; i < 8; i++) {
         if(d & 0x80) {
-          u16 data = CPUReadByte(cpu, source++) << 8;
-          data |= CPUReadByte(cpu, source++);
+          u16 data = CPUReadByte(source++) << 8;
+          data |= CPUReadByte(source++);
           int length = (data >> 12) + 3;
           int offset = (data & 0x0FFF);
           u32 windowOffset = dest + byteCount - offset - 1;
           for(int i2 = 0; i2 < length; i2++) {
-            writeValue |= (CPUReadByte(cpu, windowOffset++) << byteShift);
+            writeValue |= (CPUReadByte(windowOffset++) << byteShift);
             byteShift += 8;
             byteCount++;
 
             if(byteCount == 2) {
-              CPUWriteHalfWord(cpu, dest, writeValue);
+              CPUWriteHalfWord(dest, writeValue);
               dest += 2;
               byteCount = 0;
               byteShift = 0;
@@ -726,11 +713,11 @@ void BIOS_LZ77UnCompVram(ARM7TDMI &cpu)
               return;
           }
         } else {
-          writeValue |= (CPUReadByte(cpu, source++) << byteShift);
+          writeValue |= (CPUReadByte(source++) << byteShift);
           byteShift += 8;
           byteCount++;
           if(byteCount == 2) {
-            CPUWriteHalfWord(cpu, dest, writeValue);
+            CPUWriteHalfWord(dest, writeValue);
             dest += 2;
             byteCount = 0;
             byteShift = 0;
@@ -744,11 +731,11 @@ void BIOS_LZ77UnCompVram(ARM7TDMI &cpu)
       }
     } else {
       for(int i = 0; i < 8; i++) {
-        writeValue |= (CPUReadByte(cpu, source++) << byteShift);
+        writeValue |= (CPUReadByte(source++) << byteShift);
         byteShift += 8;
         byteCount++;
         if(byteCount == 2) {
-          CPUWriteHalfWord(cpu, dest, writeValue);
+          CPUWriteHalfWord(dest, writeValue);
           dest += 2;
           byteShift = 0;
           byteCount = 0;
@@ -762,9 +749,8 @@ void BIOS_LZ77UnCompVram(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_LZ77UnCompWram(ARM7TDMI &cpu)
+void BIOS_LZ77UnCompWram()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("LZ77UnCompWram: 0x%08x,0x%08x (VCOUNT=%d)\n", reg[0].I, reg[1].I,
@@ -775,7 +761,7 @@ void BIOS_LZ77UnCompWram(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source);
+  u32 header = CPUReadMemory(source);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -785,24 +771,24 @@ void BIOS_LZ77UnCompWram(ARM7TDMI &cpu)
   int len = header >> 8;
 
   while(len > 0) {
-    u8 d = CPUReadByte(cpu, source++);
+    u8 d = CPUReadByte(source++);
 
     if(d) {
       for(int i = 0; i < 8; i++) {
         if(d & 0x80) {
-          u16 data = CPUReadByte(cpu, source++) << 8;
-          data |= CPUReadByte(cpu, source++);
+          u16 data = CPUReadByte(source++) << 8;
+          data |= CPUReadByte(source++);
           int length = (data >> 12) + 3;
           int offset = (data & 0x0FFF);
           u32 windowOffset = dest - offset - 1;
           for(int i2 = 0; i2 < length; i2++) {
-            CPUWriteByte(cpu, dest++, CPUReadByte(cpu, windowOffset++));
+            CPUWriteByte(dest++, CPUReadByte(windowOffset++));
             len--;
             if(len == 0)
               return;
           }
         } else {
-          CPUWriteByte(cpu, dest++, CPUReadByte(cpu, source++));
+          CPUWriteByte(dest++, CPUReadByte(source++));
           len--;
           if(len == 0)
             return;
@@ -811,7 +797,7 @@ void BIOS_LZ77UnCompWram(ARM7TDMI &cpu)
       }
     } else {
       for(int i = 0; i < 8; i++) {
-        CPUWriteByte(cpu, dest++, CPUReadByte(cpu, source++));
+        CPUWriteByte(dest++, CPUReadByte(source++));
         len--;
         if(len == 0)
           return;
@@ -820,9 +806,8 @@ void BIOS_LZ77UnCompWram(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_ObjAffineSet(ARM7TDMI &cpu)
+void BIOS_ObjAffineSet()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("ObjAffineSet: 0x%08x,0x%08x,0x%08x,0x%08x (VCOUNT=%d)\n",
@@ -840,11 +825,11 @@ void BIOS_ObjAffineSet(ARM7TDMI &cpu)
   int offset = reg[3].I;
 
   for(int i = 0; i < num; i++) {
-    s16 rx = CPUReadHalfWord(cpu, src);
+    s16 rx = CPUReadHalfWord(src);
     src+=2;
-    s16 ry = CPUReadHalfWord(cpu, src);
+    s16 ry = CPUReadHalfWord(src);
     src+=2;
-    u16 theta = CPUReadHalfWord(cpu, src)>>8;
+    u16 theta = CPUReadHalfWord(src)>>8;
     src+=4; // keep structure alignment
 
     s32 a = (s32)sineTable[(theta+0x40)&255];
@@ -855,35 +840,34 @@ void BIOS_ObjAffineSet(ARM7TDMI &cpu)
     s16 dy =  ((s32)ry * b)>>14;
     s16 dmy = ((s32)ry * a)>>14;
 
-    CPUWriteHalfWord(cpu, dest, dx);
+    CPUWriteHalfWord(dest, dx);
     dest += offset;
-    CPUWriteHalfWord(cpu, dest, -dmx);
+    CPUWriteHalfWord(dest, -dmx);
     dest += offset;
-    CPUWriteHalfWord(cpu, dest, dy);
+    CPUWriteHalfWord(dest, dy);
     dest += offset;
-    CPUWriteHalfWord(cpu, dest, dmy);
+    CPUWriteHalfWord(dest, dmy);
     dest += offset;
   }
 }
 
-void BIOS_RegisterRamReset(ARM7TDMI &cpu, u32 flags)
+void BIOS_RegisterRamReset(u32 flags)
 {
   // no need to trace here. this is only called directly from GBA.cpp
   // to emulate bios initialization
 
-  CPUUpdateRegister(cpu, 0x0, 0x80);
+  CPUUpdateRegister(0x0, 0x80);
 
   if(flags) {
     if(flags & 0x01) {
       // clear work RAM
-      memset(cpu.gba->mem.workRAM, 0, 0x40000);
+      memset(workRAM, 0, 0x40000);
     }
     if(flags & 0x02) {
       // clear internal RAM
-      memset(cpu.gba->mem.internalRAM, 0, 0x7e00); // don't clear 0x7e00-0x7fff
+      memset(internalRAM, 0, 0x7e00); // don't clear 0x7e00-0x7fff
     }
-    cpu.gba->lcd.registerRamReset(flags);
-    /*if(flags & 0x04) {
+    if(flags & 0x04) {
       // clear palette RAM
       memset(paletteRAM, 0, 0x400);
     }
@@ -894,58 +878,57 @@ void BIOS_RegisterRamReset(ARM7TDMI &cpu, u32 flags)
     if(flags & 0x10) {
       // clean OAM
       memset(oam, 0, 0x400);
-    }*/
+    }
 
     if(flags & 0x80) {
       int i;
       for(i = 0; i < 0x10; i++)
-        CPUUpdateRegister(cpu, 0x200+i*2, 0);
+        CPUUpdateRegister(0x200+i*2, 0);
 
       for(i = 0; i < 0xF; i++)
-        CPUUpdateRegister(cpu, 0x4+i*2, 0);
+        CPUUpdateRegister(0x4+i*2, 0);
 
       for(i = 0; i < 0x20; i++)
-        CPUUpdateRegister(cpu, 0x20+i*2, 0);
+        CPUUpdateRegister(0x20+i*2, 0);
 
       for(i = 0; i < 0x18; i++)
-        CPUUpdateRegister(cpu, 0xb0+i*2, 0);
+        CPUUpdateRegister(0xb0+i*2, 0);
 
-      CPUUpdateRegister(cpu, 0x130, 0);
-      CPUUpdateRegister(cpu, 0x20, 0x100);
-      CPUUpdateRegister(cpu, 0x30, 0x100);
-      CPUUpdateRegister(cpu, 0x26, 0x100);
-      CPUUpdateRegister(cpu, 0x36, 0x100);
+      CPUUpdateRegister(0x130, 0);
+      CPUUpdateRegister(0x20, 0x100);
+      CPUUpdateRegister(0x30, 0x100);
+      CPUUpdateRegister(0x26, 0x100);
+      CPUUpdateRegister(0x36, 0x100);
     }
 
     if(flags & 0x20) {
       int i;
       for(i = 0; i < 8; i++)
-        CPUUpdateRegister(cpu, 0x110+i*2, 0);
-      CPUUpdateRegister(cpu, 0x134, 0x8000);
+        CPUUpdateRegister(0x110+i*2, 0);
+      CPUUpdateRegister(0x134, 0x8000);
       for(i = 0; i < 7; i++)
-        CPUUpdateRegister(cpu, 0x140+i*2, 0);
+        CPUUpdateRegister(0x140+i*2, 0);
     }
 
     if(flags & 0x40) {
       int i;
-      CPUWriteByte(cpu, 0x4000084, 0);
-      CPUWriteByte(cpu, 0x4000084, 0x80);
-      CPUWriteMemory(cpu, 0x4000080, 0x880e0000);
-      CPUUpdateRegister(cpu, 0x88, CPUReadHalfWord(cpu, 0x4000088)&0x3ff);
-      CPUWriteByte(cpu, 0x4000070, 0x70);
+      CPUWriteByte(0x4000084, 0);
+      CPUWriteByte(0x4000084, 0x80);
+      CPUWriteMemory(0x4000080, 0x880e0000);
+      CPUUpdateRegister(0x88, CPUReadHalfWord(0x4000088)&0x3ff);
+      CPUWriteByte(0x4000070, 0x70);
       for(i = 0; i < 8; i++)
-        CPUUpdateRegister(cpu, 0x90+i*2, 0);
-      CPUWriteByte(cpu, 0x4000070, 0);
+        CPUUpdateRegister(0x90+i*2, 0);
+      CPUWriteByte(0x4000070, 0);
       for(i = 0; i < 8; i++)
-        CPUUpdateRegister(cpu, 0x90+i*2, 0);
-      CPUWriteByte(cpu, 0x4000084, 0);
+        CPUUpdateRegister(0x90+i*2, 0);
+      CPUWriteByte(0x4000084, 0);
     }
   }
 }
 
-void BIOS_RegisterRamReset(ARM7TDMI &cpu)
+void BIOS_RegisterRamReset()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("RegisterRamReset: 0x%08x (VCOUNT=%d)\n",
@@ -954,12 +937,11 @@ void BIOS_RegisterRamReset(ARM7TDMI &cpu)
   }
 #endif
 
-  BIOS_RegisterRamReset(cpu, reg[0].I);
+  BIOS_RegisterRamReset(reg[0].I);
 }
 
-void BIOS_RLUnCompVram(ARM7TDMI &cpu)
+void BIOS_RLUnCompVram()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("RLUnCompVram: 0x%08x,0x%08x (VCOUNT=%d)\n",
@@ -972,7 +954,7 @@ void BIOS_RLUnCompVram(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source & 0xFFFFFFFC);
+  u32 header = CPUReadMemory(source & 0xFFFFFFFC);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -985,10 +967,10 @@ void BIOS_RLUnCompVram(ARM7TDMI &cpu)
   u32 writeValue = 0;
 
   while(len > 0) {
-    u8 d = CPUReadByte(cpu, source++);
+    u8 d = CPUReadByte(source++);
     int l = d & 0x7F;
     if(d & 0x80) {
-      u8 data = CPUReadByte(cpu, source++);
+      u8 data = CPUReadByte(source++);
       l += 3;
       for(int i = 0;i < l; i++) {
         writeValue |= (data << byteShift);
@@ -996,7 +978,7 @@ void BIOS_RLUnCompVram(ARM7TDMI &cpu)
         byteCount++;
 
         if(byteCount == 2) {
-          CPUWriteHalfWord(cpu, dest, writeValue);
+          CPUWriteHalfWord(dest, writeValue);
           dest += 2;
           byteCount = 0;
           byteShift = 0;
@@ -1009,11 +991,11 @@ void BIOS_RLUnCompVram(ARM7TDMI &cpu)
     } else {
       l++;
       for(int i = 0; i < l; i++) {
-        writeValue |= (CPUReadByte(cpu, source++) << byteShift);
+        writeValue |= (CPUReadByte(source++) << byteShift);
         byteShift += 8;
         byteCount++;
         if(byteCount == 2) {
-          CPUWriteHalfWord(cpu, dest, writeValue);
+          CPUWriteHalfWord(dest, writeValue);
           dest += 2;
           byteCount = 0;
           byteShift = 0;
@@ -1027,9 +1009,8 @@ void BIOS_RLUnCompVram(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_RLUnCompWram(ARM7TDMI &cpu)
+void BIOS_RLUnCompWram()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("RLUnCompWram: 0x%08x,0x%08x (VCOUNT=%d)\n",
@@ -1042,7 +1023,7 @@ void BIOS_RLUnCompWram(ARM7TDMI &cpu)
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(cpu, source & 0xFFFFFFFC);
+  u32 header = CPUReadMemory(source & 0xFFFFFFFC);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -1052,13 +1033,13 @@ void BIOS_RLUnCompWram(ARM7TDMI &cpu)
   int len = header >> 8;
 
   while(len > 0) {
-    u8 d = CPUReadByte(cpu, source++);
+    u8 d = CPUReadByte(source++);
     int l = d & 0x7F;
     if(d & 0x80) {
-      u8 data = CPUReadByte(cpu, source++);
+      u8 data = CPUReadByte(source++);
       l += 3;
       for(int i = 0;i < l; i++) {
-        CPUWriteByte(cpu, dest++, data);
+        CPUWriteByte(dest++, data);
         len--;
         if(len == 0)
           return;
@@ -1066,7 +1047,7 @@ void BIOS_RLUnCompWram(ARM7TDMI &cpu)
     } else {
       l++;
       for(int i = 0; i < l; i++) {
-        CPUWriteByte(cpu, dest++,  CPUReadByte(cpu, source++));
+        CPUWriteByte(dest++,  CPUReadByte(source++));
         len--;
         if(len == 0)
           return;
@@ -1075,7 +1056,7 @@ void BIOS_RLUnCompWram(ARM7TDMI &cpu)
   }
 }
 
-void BIOS_SoftReset(ARM7TDMI &cpu)
+void BIOS_SoftReset()
 {
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
@@ -1083,10 +1064,7 @@ void BIOS_SoftReset(ARM7TDMI &cpu)
   }
 #endif
 
-  cpu.softReset(cpu.gba->mem.internalRAM[0x7ffa]);
-  memset(&cpu.gba->mem.internalRAM[0x7e00], 0, 0x200);
-
-  /*armState = true;
+  armState = true;
   armMode = 0x1F;
   armIrqEnable = false;
   C_FLAG = V_FLAG = N_FLAG = Z_FLAG = false;
@@ -1109,12 +1087,11 @@ void BIOS_SoftReset(ARM7TDMI &cpu)
   } else {
     armNextPC = 0x08000000;
     reg[15].I = 0x08000004;
-  }*/
+  }
 }
 
-void BIOS_Sqrt(ARM7TDMI &cpu)
+void BIOS_Sqrt()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("Sqrt: %08x (VCOUNT=%2d)\n",
@@ -1122,7 +1099,7 @@ void BIOS_Sqrt(ARM7TDMI &cpu)
         VCOUNT);
   }
 #endif
-  reg[0].I = (u32)sqrt((SysDecimal)reg[0].I);
+  reg[0].I = (u32)sqrt((double)reg[0].I);
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("Sqrt: return=%08x\n",
@@ -1131,9 +1108,8 @@ void BIOS_Sqrt(ARM7TDMI &cpu)
 #endif
 }
 
-void BIOS_MidiKey2Freq(ARM7TDMI &cpu)
+void BIOS_MidiKey2Freq()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("MidiKey2Freq: WaveData=%08x mk=%08x fp=%08x\n",
@@ -1142,11 +1118,11 @@ void BIOS_MidiKey2Freq(ARM7TDMI &cpu)
         reg[2].I);
   }
 #endif
-  int freq = CPUReadMemory(cpu, reg[0].I+4);
-  SysDecimal tmp;
-  tmp = ((SysDecimal)(180 - reg[1].I)) - ((SysDecimal)reg[2].I / 256.f);
-  tmp = pow((SysDecimal)2.f, tmp / 12.f);
-  reg[0].I = (int)((SysDecimal)freq / tmp);
+  int freq = CPUReadMemory(reg[0].I+4);
+  double tmp;
+  tmp = ((double)(180 - reg[1].I)) - ((double)reg[2].I / 256.f);
+  tmp = pow((double)2.f, tmp / 12.f);
+  reg[0].I = (int)((double)freq / tmp);
 
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
@@ -1156,9 +1132,8 @@ void BIOS_MidiKey2Freq(ARM7TDMI &cpu)
 #endif
 }
 
-void BIOS_SndDriverJmpTableCopy(ARM7TDMI &cpu)
+void BIOS_SndDriverJmpTableCopy()
 {
-	reg_pair (&reg)[45] = cpu.reg;
 #ifdef GBA_LOGGING
   if(systemVerbose & VERBOSE_SWI) {
     log("SndDriverJmpTableCopy: dest=%08x\n",
@@ -1166,7 +1141,7 @@ void BIOS_SndDriverJmpTableCopy(ARM7TDMI &cpu)
   }
 #endif
   for(int i = 0; i < 0x24; i++) {
-    CPUWriteMemory(cpu, reg[0].I, 0x9c);
+    CPUWriteMemory(reg[0].I, 0x9c);
     reg[0].I += 4;
   }
 }
