@@ -301,10 +301,10 @@ u8 v3_deadtable2[256] = {
 #define CHEAT_IS_HEX(a) ( ((a)>='A' && (a) <='F') || ((a) >='0' && (a) <= '9'))
 
 #define CHEAT_PATCH_ROM_16BIT(a,v) \
-  WRITE16LE(((u16 *)&cpu.gba->mem.rom[(a) & 0x1ffffff]), v);
+  WRITE16LE(((u16 *)&rom[(a) & 0x1ffffff]), v);
 
 #define CHEAT_PATCH_ROM_32BIT(a,v) \
-  WRITE32LE(((u32 *)&cpu.gba->mem.rom[(a) & 0x1ffffff]), v);
+  WRITE32LE(((u32 *)&rom[(a) & 0x1ffffff]), v);
 
 static bool isMultilineWithData(int i)
 {
@@ -564,7 +564,7 @@ static int getCodeLength(int num)
   return 1;
 }
 
-int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
+int cheatsCheckKeys(u32 keys, u32 extended)
 {
   bool onoff = true;
   int ticks = 0;
@@ -608,7 +608,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
         int count = (cheatsList[i].value >> 16) & 255;
         int ainc = (cheatsList[i].value & 0xffff);
         while(count > 0) {
-          CPUWriteByte(cpu, addr, value);
+          CPUWriteByte(addr, value);
           value += vinc;
           addr += ainc;
           count--;
@@ -624,7 +624,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
         int count = (cheatsList[i].value >> 16) & 255;
         int ainc = (cheatsList[i].value & 0xffff)*2;
         while(count > 0) {
-          CPUWriteHalfWord(cpu, addr, value);
+          CPUWriteHalfWord(addr, value);
           value += vinc;
           addr += ainc;
           count--;
@@ -640,7 +640,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
         int count = (cheatsList[i].value >> 16) & 255;
         int ainc = (cheatsList[i].value & 0xffff)*4;
         while(count > 0) {
-          CPUWriteMemory(cpu, addr, value);
+          CPUWriteMemory(addr, value);
           value += vinc;
           addr += ainc;
           count--;
@@ -651,7 +651,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
         if(extended & 4) {
-          CPUWriteByte(cpu, cheatsList[i-1].value, cheatsList[i].address);
+          CPUWriteByte(cheatsList[i-1].value, cheatsList[i].address);
         }
       }
       break;
@@ -659,7 +659,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
         if(extended & 4) {
-          CPUWriteHalfWord(cpu, cheatsList[i-1].value, cheatsList[i].address);
+          CPUWriteHalfWord(cheatsList[i-1].value, cheatsList[i].address);
         }
       }
       break;
@@ -667,14 +667,14 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
         if(extended & 4) {
-          CPUWriteMemory(cpu, cheatsList[i-1].value, cheatsList[i].address);
+          CPUWriteMemory(cheatsList[i-1].value, cheatsList[i].address);
         }
       }
       break;
       case GSA_16_BIT_ROM_PATCH:
         if((cheatsList[i].status & 1) == 0) {
-          if(CPUReadHalfWord(cpu, cheatsList[i].address) != cheatsList[i].value) {
-            cheatsList[i].oldValue = CPUReadHalfWord(cpu, cheatsList[i].address);
+          if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
+            cheatsList[i].oldValue = CPUReadHalfWord(cheatsList[i].address);
             cheatsList[i].status |= 1;
             CHEAT_PATCH_ROM_16BIT(cheatsList[i].address, cheatsList[i].value);
           }
@@ -684,7 +684,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
 		  rompatch2addr [0] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
-		  rompatch2oldval [0] = CPUReadHalfWord(cpu, rompatch2addr [0]);
+		  rompatch2oldval [0] = CPUReadHalfWord(rompatch2addr [0]);
 		  rompatch2val [0] = cheatsList[i].rawaddress & 0xFFFF;
       }
       break;
@@ -692,7 +692,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
 		  rompatch2addr [1] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
-		  rompatch2oldval [1] = CPUReadHalfWord(cpu, rompatch2addr [1]);
+		  rompatch2oldval [1] = CPUReadHalfWord(rompatch2addr [1]);
 		  rompatch2val [1] = cheatsList[i].rawaddress & 0xFFFF;
       }
       break;
@@ -700,7 +700,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
 		  rompatch2addr [2] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
-		  rompatch2oldval [2] = CPUReadHalfWord(cpu, rompatch2addr [2]);
+		  rompatch2oldval [2] = CPUReadHalfWord(rompatch2addr [2]);
 		  rompatch2val [2] = cheatsList[i].rawaddress & 0xFFFF;
       }
       break;
@@ -708,7 +708,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
       i++;
       if(i < cheatsNumber) {
 		  rompatch2addr [3] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
-		  rompatch2oldval [3] = CPUReadHalfWord(cpu, rompatch2addr [3]);
+		  rompatch2oldval [3] = CPUReadHalfWord(rompatch2addr [3]);
 		  rompatch2val [3] = cheatsList[i].rawaddress & 0xFFFF;
       }
       break;
@@ -719,27 +719,27 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
     if (onoff) {
       switch(cheatsList[i].size) {
       case INT_8_BIT_WRITE:
-        CPUWriteByte(cpu, cheatsList[i].address, cheatsList[i].value);
+        CPUWriteByte(cheatsList[i].address, cheatsList[i].value);
         break;
       case INT_16_BIT_WRITE:
-        CPUWriteHalfWord(cpu, cheatsList[i].address, cheatsList[i].value);
+        CPUWriteHalfWord(cheatsList[i].address, cheatsList[i].value);
         break;
       case INT_32_BIT_WRITE:
-        CPUWriteMemory(cpu, cheatsList[i].address, cheatsList[i].value);
+        CPUWriteMemory(cheatsList[i].address, cheatsList[i].value);
         break;
       case GSA_8_BIT_GS_WRITE:
         if(extended & 4) {
-          CPUWriteByte(cpu, cheatsList[i].address, cheatsList[i].value);
+          CPUWriteByte(cheatsList[i].address, cheatsList[i].value);
         }
         break;
       case GSA_16_BIT_GS_WRITE:
         if(extended & 4) {
-          CPUWriteHalfWord(cpu, cheatsList[i].address, cheatsList[i].value);
+          CPUWriteHalfWord(cheatsList[i].address, cheatsList[i].value);
         }
         break;
       case GSA_32_BIT_GS_WRITE:
         if(extended & 4) {
-          CPUWriteMemory(cpu, cheatsList[i].address, cheatsList[i].value);
+          CPUWriteMemory(cheatsList[i].address, cheatsList[i].value);
         }
         break;
       case CBA_IF_KEYS_PRESSED:
@@ -762,7 +762,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
 		}
         break;
       case CBA_IF_TRUE:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
           i++;
         }
         break;
@@ -776,7 +776,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
             u16 vinc = (cheatsList[i].address >> 16) & 0xFFFF;
             int inc = cheatsList[i].value;
             for(int x = 0; x <= count ; x++) {
-              CPUWriteHalfWord(cpu, address, value);
+              CPUWriteHalfWord(address, value);
               address += inc;
               value += vinc;
 			}
@@ -784,32 +784,32 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
 		}
         break;
       case CBA_IF_FALSE:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) == cheatsList[i].value){
+        if(CPUReadHalfWord(cheatsList[i].address) == cheatsList[i].value){
           i++;
         }
       break;
       case CBA_AND:
-        CPUWriteHalfWord(cpu, cheatsList[i].address,
-                         CPUReadHalfWord(cpu, cheatsList[i].address) &
+        CPUWriteHalfWord(cheatsList[i].address,
+                         CPUReadHalfWord(cheatsList[i].address) &
                          cheatsList[i].value);
         break;
       case GSA_8_BIT_IF_TRUE:
-        if(CPUReadByte(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadByte(cheatsList[i].address) != cheatsList[i].value) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_TRUE:
-        if(CPUReadMemory(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadMemory(cheatsList[i].address) != cheatsList[i].value) {
           i++;
         }
         break;
       case GSA_8_BIT_IF_FALSE:
-        if(CPUReadByte(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadByte(cheatsList[i].address) == cheatsList[i].value) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_FALSE:
-        if(CPUReadMemory(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadMemory(cheatsList[i].address) == cheatsList[i].value) {
           i++;
         }
         break;
@@ -819,7 +819,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
           u8 v = cheatsList[i].value & 0xff;
           u32 end = addr + (cheatsList[i].value >> 8);
           do {
-            CPUWriteByte(cpu, addr, v);
+            CPUWriteByte(addr, v);
             addr++;
 		  } while (addr <= end);
 		}
@@ -830,64 +830,64 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
           u16 v = cheatsList[i].value & 0xffff;
           u32 end = addr + ((cheatsList[i].value >> 16) << 1);
           do {
-            CPUWriteHalfWord(cpu, addr, v);
+            CPUWriteHalfWord(addr, v);
             addr+=2;
 		  } while (addr <= end);
 		}
         break;
       case GSA_8_BIT_IF_TRUE2:
-        if(CPUReadByte(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadByte(cheatsList[i].address) != cheatsList[i].value) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_TRUE2:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_TRUE2:
-        if(CPUReadMemory(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadMemory(cheatsList[i].address) != cheatsList[i].value) {
           i+=2;
         }
         break;
       case GSA_8_BIT_IF_FALSE2:
-        if(CPUReadByte(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadByte(cheatsList[i].address) == cheatsList[i].value) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_FALSE2:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) == cheatsList[i].value) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_FALSE2:
-        if(CPUReadMemory(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadMemory(cheatsList[i].address) == cheatsList[i].value) {
           i+=2;
         }
         break;
       case CBA_ADD:
         if ((cheatsList[i].address & 1) == 0) {
-          CPUWriteHalfWord(cpu, cheatsList[i].address,
-                           CPUReadHalfWord(cpu, cheatsList[i].address) +
+          CPUWriteHalfWord(cheatsList[i].address,
+                           CPUReadHalfWord(cheatsList[i].address) +
                            cheatsList[i].value);
         } else {
-          CPUWriteMemory(cpu, cheatsList[i].address & 0x0FFFFFFE,
-                           CPUReadMemory(cpu, cheatsList[i].address & 0x0FFFFFFE) +
+          CPUWriteMemory(cheatsList[i].address & 0x0FFFFFFE,
+                           CPUReadMemory(cheatsList[i].address & 0x0FFFFFFE) +
                            cheatsList[i].value);
         }
         break;
       case CBA_OR:
-        CPUWriteHalfWord(cpu, cheatsList[i].address,
-                         CPUReadHalfWord(cpu, cheatsList[i].address) |
+        CPUWriteHalfWord(cheatsList[i].address,
+                         CPUReadHalfWord(cheatsList[i].address) |
                          cheatsList[i].value);
         break;
       case CBA_GT:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) > cheatsList[i].value)){
+        if (!(CPUReadHalfWord(cheatsList[i].address) > cheatsList[i].value)){
           i++;
         }
         break;
       case CBA_LT:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) < cheatsList[i].value)){
+        if (!(CPUReadHalfWord(cheatsList[i].address) < cheatsList[i].value)){
           i++;
         }
         break;
@@ -904,134 +904,134 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
               b = (cheatsList[i].address >> (24-8*res)) & 0xFF;
             else
               b = (cheatsList[i].value >> (8 - 8*(res-4))) & 0xFF;
-            CPUWriteByte(cpu, address, b);
+            CPUWriteByte(address, b);
             address++;
 		  }
 		}
         break;
       case GSA_8_BIT_POINTER :
-        if (((CPUReadMemory(cpu, cheatsList[i].address)>=0x02000000) && (CPUReadMemory(cpu, cheatsList[i].address)<0x02040000)) ||
-            ((CPUReadMemory(cpu, cheatsList[i].address)>=0x03000000) && (CPUReadMemory(cpu, cheatsList[i].address)<0x03008000)))
+        if (((CPUReadMemory(cheatsList[i].address)>=0x02000000) && (CPUReadMemory(cheatsList[i].address)<0x02040000)) ||
+            ((CPUReadMemory(cheatsList[i].address)>=0x03000000) && (CPUReadMemory(cheatsList[i].address)<0x03008000)))
         {
-          CPUWriteByte(cpu, CPUReadMemory(cpu, cheatsList[i].address)+((cheatsList[i].value & 0xFFFFFF00) >> 8),
+          CPUWriteByte(CPUReadMemory(cheatsList[i].address)+((cheatsList[i].value & 0xFFFFFF00) >> 8),
                        cheatsList[i].value & 0xFF);
         }
         break;
       case GSA_16_BIT_POINTER :
-        if (((CPUReadMemory(cpu, cheatsList[i].address)>=0x02000000) && (CPUReadMemory(cpu, cheatsList[i].address)<0x02040000)) ||
-            ((CPUReadMemory(cpu, cheatsList[i].address)>=0x03000000) && (CPUReadMemory(cpu, cheatsList[i].address)<0x03008000)))
+        if (((CPUReadMemory(cheatsList[i].address)>=0x02000000) && (CPUReadMemory(cheatsList[i].address)<0x02040000)) ||
+            ((CPUReadMemory(cheatsList[i].address)>=0x03000000) && (CPUReadMemory(cheatsList[i].address)<0x03008000)))
         {
-          CPUWriteHalfWord(cpu, CPUReadMemory(cpu, cheatsList[i].address)+((cheatsList[i].value & 0xFFFF0000) >> 15),
+          CPUWriteHalfWord(CPUReadMemory(cheatsList[i].address)+((cheatsList[i].value & 0xFFFF0000) >> 15),
                        cheatsList[i].value & 0xFFFF);
         }
         break;
       case GSA_32_BIT_POINTER :
-        if (((CPUReadMemory(cpu, cheatsList[i].address)>=0x02000000) && (CPUReadMemory(cpu, cheatsList[i].address)<0x02040000)) ||
-            ((CPUReadMemory(cpu, cheatsList[i].address)>=0x03000000) && (CPUReadMemory(cpu, cheatsList[i].address)<0x03008000)))
+        if (((CPUReadMemory(cheatsList[i].address)>=0x02000000) && (CPUReadMemory(cheatsList[i].address)<0x02040000)) ||
+            ((CPUReadMemory(cheatsList[i].address)>=0x03000000) && (CPUReadMemory(cheatsList[i].address)<0x03008000)))
         {
-          CPUWriteMemory(cpu, CPUReadMemory(cpu, cheatsList[i].address),
+          CPUWriteMemory(CPUReadMemory(cheatsList[i].address),
                        cheatsList[i].value);
         }
         break;
       case GSA_8_BIT_ADD :
-        CPUWriteByte(cpu, cheatsList[i].address,
-                    ((cheatsList[i].value & 0xFF) + CPUReadMemory(cpu, cheatsList[i].address)) & 0xFF);
+        CPUWriteByte(cheatsList[i].address,
+                    ((cheatsList[i].value & 0xFF) + CPUReadMemory(cheatsList[i].address)) & 0xFF);
         break;
       case GSA_16_BIT_ADD :
-        CPUWriteHalfWord(cpu, cheatsList[i].address,
-                        ((cheatsList[i].value & 0xFFFF) + CPUReadMemory(cpu, cheatsList[i].address)) & 0xFFFF);
+        CPUWriteHalfWord(cheatsList[i].address,
+                        ((cheatsList[i].value & 0xFFFF) + CPUReadMemory(cheatsList[i].address)) & 0xFFFF);
         break;
       case GSA_32_BIT_ADD :
-        CPUWriteMemory(cpu, cheatsList[i].address ,
-                       (cheatsList[i].value + CPUReadMemory(cpu, cheatsList[i].address)) & 0xFFFFFFFF);
+        CPUWriteMemory(cheatsList[i].address ,
+                       (cheatsList[i].value + CPUReadMemory(cheatsList[i].address)) & 0xFFFFFFFF);
         break;
       case GSA_8_BIT_IF_LOWER_U:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) < (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) < (cheatsList[i].value & 0xFF))) {
           i++;
         }
         break;
       case GSA_16_BIT_IF_LOWER_U:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) < (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) < (cheatsList[i].value & 0xFFFF))) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_LOWER_U:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) < cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) < cheatsList[i].value)) {
           i++;
         }
         break;
       case GSA_8_BIT_IF_HIGHER_U:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) > (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) > (cheatsList[i].value & 0xFF))) {
           i++;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_U:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) > (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) > (cheatsList[i].value & 0xFFFF))) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_HIGHER_U:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) > cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) > cheatsList[i].value)) {
           i++;
         }
         break;
       case GSA_8_BIT_IF_AND:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) & (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) & (cheatsList[i].value & 0xFF))) {
           i++;
         }
         break;
       case GSA_16_BIT_IF_AND:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) & (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) & (cheatsList[i].value & 0xFFFF))) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_AND:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) & cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) & cheatsList[i].value)) {
           i++;
         }
         break;
       case GSA_8_BIT_IF_LOWER_U2:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) < (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) < (cheatsList[i].value & 0xFF))) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_LOWER_U2:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) < (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) < (cheatsList[i].value & 0xFFFF))) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_LOWER_U2:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) < cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) < cheatsList[i].value)) {
           i+=2;
         }
         break;
       case GSA_8_BIT_IF_HIGHER_U2:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) > (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) > (cheatsList[i].value & 0xFF))) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_U2:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) > (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) > (cheatsList[i].value & 0xFFFF))) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_HIGHER_U2:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) > cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) > cheatsList[i].value)) {
           i+=2;
         }
         break;
       case GSA_8_BIT_IF_AND2:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) & (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) & (cheatsList[i].value & 0xFF))) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_AND2:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) & (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) & (cheatsList[i].value & 0xFFFF))) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_AND2:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) & cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) & cheatsList[i].value)) {
           i+=2;
         }
         break;
@@ -1042,186 +1042,186 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
         i+=2;
         break;
       case GSA_8_BIT_IF_LOWER_S:
-        if (!((s8)CPUReadByte(cpu, cheatsList[i].address) < ((s8)cheatsList[i].value & 0xFF))) {
+        if (!((s8)CPUReadByte(cheatsList[i].address) < ((s8)cheatsList[i].value & 0xFF))) {
           i++;
         }
         break;
       case GSA_16_BIT_IF_LOWER_S:
-        if (!((s16)CPUReadHalfWord(cpu, cheatsList[i].address) < ((s16)cheatsList[i].value & 0xFFFF))) {
+        if (!((s16)CPUReadHalfWord(cheatsList[i].address) < ((s16)cheatsList[i].value & 0xFFFF))) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_LOWER_S:
-        if (!((s32)CPUReadMemory(cpu, cheatsList[i].address) < (s32)cheatsList[i].value)) {
+        if (!((s32)CPUReadMemory(cheatsList[i].address) < (s32)cheatsList[i].value)) {
           i++;
         }
         break;
       case GSA_8_BIT_IF_HIGHER_S:
-        if (!((s8)CPUReadByte(cpu, cheatsList[i].address) > ((s8)cheatsList[i].value & 0xFF))) {
+        if (!((s8)CPUReadByte(cheatsList[i].address) > ((s8)cheatsList[i].value & 0xFF))) {
           i++;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_S:
-        if (!((s16)CPUReadHalfWord(cpu, cheatsList[i].address) > ((s16)cheatsList[i].value & 0xFFFF))) {
+        if (!((s16)CPUReadHalfWord(cheatsList[i].address) > ((s16)cheatsList[i].value & 0xFFFF))) {
           i++;
         }
         break;
       case GSA_32_BIT_IF_HIGHER_S:
-        if (!((s32)CPUReadMemory(cpu, cheatsList[i].address) > (s32)cheatsList[i].value)) {
+        if (!((s32)CPUReadMemory(cheatsList[i].address) > (s32)cheatsList[i].value)) {
           i++;
         }
         break;
       case GSA_8_BIT_IF_LOWER_S2:
-        if (!((s8)CPUReadByte(cpu, cheatsList[i].address) < ((s8)cheatsList[i].value & 0xFF))) {
+        if (!((s8)CPUReadByte(cheatsList[i].address) < ((s8)cheatsList[i].value & 0xFF))) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_LOWER_S2:
-        if (!((s16)CPUReadHalfWord(cpu, cheatsList[i].address) < ((s16)cheatsList[i].value & 0xFFFF))) {
+        if (!((s16)CPUReadHalfWord(cheatsList[i].address) < ((s16)cheatsList[i].value & 0xFFFF))) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_LOWER_S2:
-        if (!((s32)CPUReadMemory(cpu, cheatsList[i].address) < (s32)cheatsList[i].value)) {
+        if (!((s32)CPUReadMemory(cheatsList[i].address) < (s32)cheatsList[i].value)) {
           i+=2;
         }
         break;
       case GSA_8_BIT_IF_HIGHER_S2:
-        if (!((s8)CPUReadByte(cpu, cheatsList[i].address) > ((s8)cheatsList[i].value & 0xFF))) {
+        if (!((s8)CPUReadByte(cheatsList[i].address) > ((s8)cheatsList[i].value & 0xFF))) {
           i+=2;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_S2:
-        if (!((s16)CPUReadHalfWord(cpu, cheatsList[i].address) > ((s16)cheatsList[i].value & 0xFFFF))) {
+        if (!((s16)CPUReadHalfWord(cheatsList[i].address) > ((s16)cheatsList[i].value & 0xFFFF))) {
           i+=2;
         }
         break;
       case GSA_32_BIT_IF_HIGHER_S2:
-        if (!((s32)CPUReadMemory(cpu, cheatsList[i].address) > (s32)cheatsList[i].value)) {
+        if (!((s32)CPUReadMemory(cheatsList[i].address) > (s32)cheatsList[i].value)) {
           i+=2;
         }
         break;
       case GSA_16_BIT_WRITE_IOREGS:
         if ((cheatsList[i].address <= 0x3FF) && (cheatsList[i].address != 0x6) &&
             (cheatsList[i].address != 0x130))
-        	cpu.gba->mem.ioMem.b[cheatsList[i].address & 0x3FE]=cheatsList[i].value & 0xFFFF;
+          ioMem[cheatsList[i].address & 0x3FE]=cheatsList[i].value & 0xFFFF;
         break;
       case GSA_32_BIT_WRITE_IOREGS:
         if (cheatsList[i].address<=0x3FF)
         {
           if (((cheatsList[i].address & 0x3FC) != 0x6) && ((cheatsList[i].address & 0x3FC) != 0x130))
-          	cpu.gba->mem.ioMem.b[cheatsList[i].address & 0x3FC]= (cheatsList[i].value & 0xFFFF);
+            ioMem[cheatsList[i].address & 0x3FC]= (cheatsList[i].value & 0xFFFF);
           if ((((cheatsList[i].address & 0x3FC)+2) != 0x6) && ((cheatsList[i].address & 0x3FC) +2) != 0x130)
-          	cpu.gba->mem.ioMem.b[(cheatsList[i].address & 0x3FC) + 2 ]= ((cheatsList[i].value>>16 ) & 0xFFFF);
+            ioMem[(cheatsList[i].address & 0x3FC) + 2 ]= ((cheatsList[i].value>>16 ) & 0xFFFF);
         }
         break;
       case GSA_8_BIT_IF_TRUE3:
-        if(CPUReadByte(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadByte(cheatsList[i].address) != cheatsList[i].value) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_TRUE3:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_TRUE3:
-        if(CPUReadMemory(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadMemory(cheatsList[i].address) != cheatsList[i].value) {
           onoff=false;
         }
         break;
       case GSA_8_BIT_IF_FALSE3:
-        if(CPUReadByte(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadByte(cheatsList[i].address) == cheatsList[i].value) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_FALSE3:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) == cheatsList[i].value) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_FALSE3:
-        if(CPUReadMemory(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadMemory(cheatsList[i].address) == cheatsList[i].value) {
           onoff=false;
         }
         break;
       case GSA_8_BIT_IF_LOWER_S3:
-        if (!((s8)CPUReadByte(cpu, cheatsList[i].address) < ((s8)cheatsList[i].value & 0xFF))) {
+        if (!((s8)CPUReadByte(cheatsList[i].address) < ((s8)cheatsList[i].value & 0xFF))) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_LOWER_S3:
-        if (!((s16)CPUReadHalfWord(cpu, cheatsList[i].address) < ((s16)cheatsList[i].value & 0xFFFF))) {
+        if (!((s16)CPUReadHalfWord(cheatsList[i].address) < ((s16)cheatsList[i].value & 0xFFFF))) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_LOWER_S3:
-        if (!((s32)CPUReadMemory(cpu, cheatsList[i].address) < (s32)cheatsList[i].value)) {
+        if (!((s32)CPUReadMemory(cheatsList[i].address) < (s32)cheatsList[i].value)) {
           onoff=false;
         }
         break;
       case GSA_8_BIT_IF_HIGHER_S3:
-        if (!((s8)CPUReadByte(cpu, cheatsList[i].address) > ((s8)cheatsList[i].value & 0xFF))) {
+        if (!((s8)CPUReadByte(cheatsList[i].address) > ((s8)cheatsList[i].value & 0xFF))) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_S3:
-        if (!((s16)CPUReadHalfWord(cpu, cheatsList[i].address) > ((s16)cheatsList[i].value & 0xFFFF))) {
+        if (!((s16)CPUReadHalfWord(cheatsList[i].address) > ((s16)cheatsList[i].value & 0xFFFF))) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_HIGHER_S3:
-        if (!((s32)CPUReadMemory(cpu, cheatsList[i].address) > (s32)cheatsList[i].value)) {
+        if (!((s32)CPUReadMemory(cheatsList[i].address) > (s32)cheatsList[i].value)) {
           onoff=false;
         }
         break;
       case GSA_8_BIT_IF_LOWER_U3:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) < (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) < (cheatsList[i].value & 0xFF))) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_LOWER_U3:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) < (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) < (cheatsList[i].value & 0xFFFF))) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_LOWER_U3:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) < cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) < cheatsList[i].value)) {
           onoff=false;
         }
         break;
       case GSA_8_BIT_IF_HIGHER_U3:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) > (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) > (cheatsList[i].value & 0xFF))) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_U3:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) > (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) > (cheatsList[i].value & 0xFFFF))) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_HIGHER_U3:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) > cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) > cheatsList[i].value)) {
           onoff=false;
         }
         break;
       case GSA_8_BIT_IF_AND3:
-        if (!(CPUReadByte(cpu, cheatsList[i].address) & (cheatsList[i].value & 0xFF))) {
+        if (!(CPUReadByte(cheatsList[i].address) & (cheatsList[i].value & 0xFF))) {
           onoff=false;
         }
         break;
       case GSA_16_BIT_IF_AND3:
-        if (!(CPUReadHalfWord(cpu, cheatsList[i].address) & (cheatsList[i].value & 0xFFFF))) {
+        if (!(CPUReadHalfWord(cheatsList[i].address) & (cheatsList[i].value & 0xFFFF))) {
           onoff=false;
         }
         break;
       case GSA_32_BIT_IF_AND3:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) & cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) & cheatsList[i].value)) {
           onoff=false;
         }
         break;
       case GSA_ALWAYS3:
-        if (!(CPUReadMemory(cpu, cheatsList[i].address) & cheatsList[i].value)) {
+        if (!(CPUReadMemory(cheatsList[i].address) & cheatsList[i].value)) {
           onoff=false;
         }
         break;
@@ -1236,50 +1236,50 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
 				if ((x % 2) ==0){
 					if (x<count)
 						i++;
-					CPUWriteMemory(cpu, cheatsList[i].rawaddress, value);
+					CPUWriteMemory(cheatsList[i].rawaddress, value);
 				}
 				else
-					CPUWriteMemory(cpu, cheatsList[i].value, value);
+					CPUWriteMemory(cheatsList[i].value, value);
 			}
 		}
 		break;
       case GSA_32_BIT_ADD2:
-        CPUWriteMemory(cpu, cheatsList[i].value ,
-                       (CPUReadMemory(cpu, cheatsList[i].value) + cheatsList[i+1].rawaddress) & 0xFFFFFFFF);
+        CPUWriteMemory(cheatsList[i].value ,
+                       (CPUReadMemory(cheatsList[i].value) + cheatsList[i+1].rawaddress) & 0xFFFFFFFF);
         i++;
 		break;
       case GSA_32_BIT_SUB2:
-        CPUWriteMemory(cpu, cheatsList[i].value ,
-                       (CPUReadMemory(cpu, cheatsList[i].value) - cheatsList[i+1].rawaddress) & 0xFFFFFFFF);
+        CPUWriteMemory(cheatsList[i].value ,
+                       (CPUReadMemory(cheatsList[i].value) - cheatsList[i+1].rawaddress) & 0xFFFFFFFF);
         i++;
 		break;
       case GSA_16_BIT_IF_LOWER_OR_EQ_U:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) > cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) > cheatsList[i].value) {
           i++;
         }
         break;
       case GSA_16_BIT_IF_HIGHER_OR_EQ_U:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) < cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) < cheatsList[i].value) {
           i++;
         }
         break;
       case GSA_16_BIT_MIF_TRUE:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) != cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
           i+=((cheatsList[i].rawaddress >> 0x10) & 0xFF);
         }
         break;
       case GSA_16_BIT_MIF_FALSE:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) == cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) == cheatsList[i].value) {
           i+=(cheatsList[i].rawaddress >> 0x10) & 0xFF;
         }
         break;
       case GSA_16_BIT_MIF_LOWER_OR_EQ_U:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) > cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) > cheatsList[i].value) {
           i+=(cheatsList[i].rawaddress >> 0x10) & 0xFF;
         }
         break;
       case GSA_16_BIT_MIF_HIGHER_OR_EQ_U:
-        if(CPUReadHalfWord(cpu, cheatsList[i].address) < cheatsList[i].value) {
+        if(CPUReadHalfWord(cheatsList[i].address) < cheatsList[i].value) {
           i+=(cheatsList[i].rawaddress >> 0x10) & 0xFF;
         }
         break;
@@ -1287,14 +1287,14 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
         if ((cheatsList[i].address>>24)>=0x08) {
           CHEAT_PATCH_ROM_16BIT(cheatsList[i].address, cheatsList[i].value);
         } else {
-          CPUWriteHalfWord(cpu, cheatsList[i].address, cheatsList[i].value);
+          CPUWriteHalfWord(cheatsList[i].address, cheatsList[i].value);
         }
         break;
       case CHEATS_32_BIT_WRITE:
         if ((cheatsList[i].address>>24)>=0x08) {
           CHEAT_PATCH_ROM_32BIT(cheatsList[i].address, cheatsList[i].value);
         } else {
-          CPUWriteMemory(cpu, cheatsList[i].address, cheatsList[i].value);
+          CPUWriteMemory(cheatsList[i].address, cheatsList[i].value);
         }
         break;
       }
@@ -1306,7 +1306,7 @@ int cheatsCheckKeys(ARM7TDMI &cpu, u32 keys, u32 extended)
   return ticks;
 }
 
-void cheatsAdd(ARM7TDMI &cpu, const char *codeStr,
+void cheatsAdd(const char *codeStr,
                const char *desc,
                u32 rawaddress,
                u32 address,
@@ -1330,26 +1330,26 @@ void cheatsAdd(ARM7TDMI &cpu, const char *codeStr,
     // is taken care when it actually patches the ROM
     switch(cheatsList[x].size) {
     case INT_8_BIT_WRITE:
-      cheatsList[x].oldValue = CPUReadByte(cpu, address);
+      cheatsList[x].oldValue = CPUReadByte(address);
       break;
     case INT_16_BIT_WRITE:
-      cheatsList[x].oldValue = CPUReadHalfWord(cpu, address);
+      cheatsList[x].oldValue = CPUReadHalfWord(address);
       break;
     case INT_32_BIT_WRITE:
-      cheatsList[x].oldValue = CPUReadMemory(cpu, address);
+      cheatsList[x].oldValue = CPUReadMemory(address);
       break;
     case CHEATS_16_BIT_WRITE:
-      cheatsList[x].oldValue = CPUReadHalfWord(cpu, address);
+      cheatsList[x].oldValue = CPUReadHalfWord(address);
       break;
     case CHEATS_32_BIT_WRITE:
-      cheatsList[x].oldValue = CPUReadMemory(cpu, address);
+      cheatsList[x].oldValue = CPUReadMemory(address);
       break;
     }
     cheatsNumber++;
   }
 }
 
-void cheatsDelete(ARM7TDMI &cpu, int number, bool restore)
+void cheatsDelete(int number, bool restore)
 {
   if(number < cheatsNumber && number >= 0) {
     int x = number;
@@ -1357,26 +1357,26 @@ void cheatsDelete(ARM7TDMI &cpu, int number, bool restore)
     if(restore) {
       switch(cheatsList[x].size) {
       case INT_8_BIT_WRITE:
-        CPUWriteByte(cpu, cheatsList[x].address, (u8)cheatsList[x].oldValue);
+        CPUWriteByte(cheatsList[x].address, (u8)cheatsList[x].oldValue);
         break;
       case INT_16_BIT_WRITE:
-        CPUWriteHalfWord(cpu, cheatsList[x].address, (u16)cheatsList[x].oldValue);
+        CPUWriteHalfWord(cheatsList[x].address, (u16)cheatsList[x].oldValue);
         break;
       case INT_32_BIT_WRITE:
-        CPUWriteMemory(cpu, cheatsList[x].address, cheatsList[x].oldValue);
+        CPUWriteMemory(cheatsList[x].address, cheatsList[x].oldValue);
         break;
       case CHEATS_16_BIT_WRITE:
         if ((cheatsList[x].address>>24)>=0x08) {
           CHEAT_PATCH_ROM_16BIT(cheatsList[x].address, cheatsList[x].oldValue);
         } else {
-          CPUWriteHalfWord(cpu, cheatsList[x].address, cheatsList[x].oldValue);
+          CPUWriteHalfWord(cheatsList[x].address, cheatsList[x].oldValue);
         }
         break;
       case CHEATS_32_BIT_WRITE:
         if ((cheatsList[x].address>>24)>=0x08) {
           CHEAT_PATCH_ROM_32BIT(cheatsList[x].address, cheatsList[x].oldValue);
         } else {
-          CPUWriteMemory(cpu, cheatsList[x].address, cheatsList[x].oldValue);
+          CPUWriteMemory(cheatsList[x].address, cheatsList[x].oldValue);
         }
       case GSA_16_BIT_ROM_PATCH:
         if(cheatsList[x].status & 1) {
@@ -1406,10 +1406,10 @@ void cheatsDelete(ARM7TDMI &cpu, int number, bool restore)
   }
 }
 
-void cheatsDeleteAll(ARM7TDMI &cpu, bool restore)
+void cheatsDeleteAll(bool restore)
 {
   for(int i = cheatsNumber-1; i >= 0; i--) {
-    cheatsDelete(cpu, i, restore);
+    cheatsDelete(i, restore);
   }
 }
 
@@ -1421,7 +1421,7 @@ void cheatsEnable(int i)
   }
 }
 
-void cheatsDisable(ARM7TDMI &cpu, int i)
+void cheatsDisable(int i)
 {
   if(i >= 0 && i < cheatsNumber) {
     switch(cheatsList[i].size) {
@@ -1448,7 +1448,7 @@ void cheatsDisable(ARM7TDMI &cpu, int i)
   }
 }
 
-bool cheatsVerifyCheatCode(ARM7TDMI &cpu, const char *code, const char *desc)
+bool cheatsVerifyCheatCode(const char *code, const char *desc)
 {
   size_t len = strlen(code);
   if(len != 11 && len != 13 && len != 17) {
@@ -1515,13 +1515,13 @@ bool cheatsVerifyCheatCode(ARM7TDMI &cpu, const char *code, const char *desc)
     type = 114;
   if(len == 17)
     type = 115;
-  cheatsAdd(cpu, code, desc, address, address, value, type, type);
+  cheatsAdd(code, desc, address, address, value, type, type);
   return true;
 }
 
-void cheatsAddCheatCode(ARM7TDMI &cpu, const char *code, const char *desc)
+void cheatsAddCheatCode(const char *code, const char *desc)
 {
-  cheatsVerifyCheatCode(cpu, code, desc);
+  cheatsVerifyCheatCode(code, desc);
 }
 
 u16 cheatsGSAGetDeadface(bool v3)
@@ -1577,7 +1577,7 @@ void cheatsDecryptGSACode(u32& address, u32& value, bool v3)
   }
 }
 
-void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3)
+void cheatsAddGSACode(const char *code, const char *desc, bool v3)
 {
   if(strlen(code) != 16) {
     // wrong cheat
@@ -1609,23 +1609,23 @@ void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3
   cheatsDecryptGSACode(address, value, v3);
 
   if(value == 0x1DC0DE) {
-    u32 gamecode = READ32LE(((u32 *)&cpu.gba->mem.rom[0xac]));
+    u32 gamecode = READ32LE(((u32 *)&rom[0xac]));
     if(gamecode != address) {
       char buffer[5];
-      *((uint32a *)buffer) = address;
+      *((u32 *)buffer) = address;
       buffer[4] = 0;
       char buffer2[5];
-      *((uint32a *)buffer2) = READ32LE(((u32 *)&cpu.gba->mem.rom[0xac]));
+      *((u32 *)buffer2) = READ32LE(((u32 *)&rom[0xac]));
       buffer2[4] = 0;
       systemMessage(MSG_GBA_CODE_WARNING, N_("Warning: cheats are for game %s. Current game is %s.\nCodes may not work correctly."),
                     buffer, buffer2);
     }
-    cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, v3 ? 257 : 256,
+    cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, v3 ? 257 : 256,
               UNKNOWN_CODE);
     return;
   }
   if(isMultilineWithData(cheatsNumber-1)) {
-    cheatsAdd(cpu, code, desc, address, address, value, v3 ? 257 : 256, UNKNOWN_CODE);
+    cheatsAdd(code, desc, address, address, value, v3 ? 257 : 256, UNKNOWN_CODE);
     return;
   }
   if(v3) {
@@ -1635,7 +1635,7 @@ void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3
 
     if ((mcode & 0xFE) == 0xC4)
     {
-      cheatsAdd(cpu, code, desc, address, (address & 0x1FFFFFF) | (0x08000000),
+      cheatsAdd(code, desc, address, (address & 0x1FFFFFF) | (0x08000000),
         value, 257, MASTER_CODE);
       mastercode = (address & 0x1FFFFFF) | (0x08000000);
     }
@@ -1647,278 +1647,278 @@ void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3
         addr = (value & 0x00F00000) << 4 | (value & 0x0003FFFF);
         switch(type) {
         case 0x04:
-          cheatsAdd(cpu, code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_SLOWDOWN);
+          cheatsAdd(code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_SLOWDOWN);
           break;
         case 0x08:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_8_BIT_GS_WRITE2);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_8_BIT_GS_WRITE2);
           break;
         case 0x09:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_16_BIT_GS_WRITE2);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_16_BIT_GS_WRITE2);
           break;
         case 0x0a:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_32_BIT_GS_WRITE2);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_32_BIT_GS_WRITE2);
           break;
         case 0x0c:
-          cheatsAdd(cpu, code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2C);
+          cheatsAdd(code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2C);
           break;
         case 0x0d:
-          cheatsAdd(cpu, code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2D);
+          cheatsAdd(code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2D);
           break;
         case 0x0e:
-          cheatsAdd(cpu, code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2E);
+          cheatsAdd(code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2E);
           break;
         case 0x0f:
-          cheatsAdd(cpu, code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2F);
+          cheatsAdd(code, desc, address, 0, value & 0x00FFFFFF, 257, GSA_16_BIT_ROM_PATCH2F);
           break;
         case 0x20:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_CODES_ON);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_CODES_ON);
           break;
         case 0x40:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_8_BIT_SLIDE);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_8_BIT_SLIDE);
           break;
         case 0x41:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_16_BIT_SLIDE);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_16_BIT_SLIDE);
           break;
         case 0x42:
-          cheatsAdd(cpu, code, desc, address, 0, addr, 257, GSA_32_BIT_SLIDE);
+          cheatsAdd(code, desc, address, 0, addr, 257, GSA_32_BIT_SLIDE);
           break;
         default:
-          cheatsAdd(cpu, code, desc, address, address, value, 257, UNKNOWN_CODE);
+          cheatsAdd(code, desc, address, address, value, 257, UNKNOWN_CODE);
           break;
         }
       } else
-        cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_FILL);
+        cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_FILL);
       break;
     case 0x01:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_FILL);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_FILL);
       break;
     case 0x02:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, INT_32_BIT_WRITE);
+      cheatsAdd(code, desc, address, addr, value, 257, INT_32_BIT_WRITE);
       break;
     case 0x04:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_TRUE);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_TRUE);
       break;
     case 0x05:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, CBA_IF_TRUE);
+      cheatsAdd(code, desc, address, addr, value, 257, CBA_IF_TRUE);
       break;
     case 0x06:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE);
       break;
     case 0x07:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_ALWAYS);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_ALWAYS);
       break;
     case 0x08:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_FALSE);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_FALSE);
       break;
     case 0x09:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, CBA_IF_FALSE);
+      cheatsAdd(code, desc, address, addr, value, 257, CBA_IF_FALSE);
       break;
     case 0x0a:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_FALSE);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_FALSE);
       break;
     case 0xc:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_S);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_S);
       break;
     case 0xd:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_S);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_S);
       break;
     case 0xe:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_S);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_S);
       break;
     case 0x10:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_S);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_S);
       break;
     case 0x11:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_S);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_S);
       break;
     case 0x12:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_S);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_S);
       break;
     case 0x14:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_U);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_U);
       break;
     case 0x15:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_U);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_U);
       break;
     case 0x16:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_U);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_U);
       break;
     case 0x18:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_U);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_U);
       break;
     case 0x19:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_U);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_U);
       break;
     case 0x1A:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_U);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_U);
       break;
     case 0x1C:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_AND);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_AND);
       break;
     case 0x1D:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_AND);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_AND);
       break;
     case 0x1E:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_AND);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_AND);
       break;
     case 0x20:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_POINTER);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_POINTER);
       break;
     case 0x21:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_POINTER);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_POINTER);
       break;
     case 0x22:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_POINTER);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_POINTER);
       break;
     case 0x24:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_TRUE2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_TRUE2);
       break;
     case 0x25:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_TRUE2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_TRUE2);
       break;
     case 0x26:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE2);
       break;
     case 0x27:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_ALWAYS2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_ALWAYS2);
       break;
     case 0x28:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_FALSE2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_FALSE2);
       break;
     case 0x29:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_FALSE2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_FALSE2);
       break;
     case 0x2a:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_FALSE2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_FALSE2);
       break;
     case 0x2c:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_S2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_S2);
       break;
     case 0x2d:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_S2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_S2);
       break;
     case 0x2e:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_S2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_S2);
       break;
     case 0x30:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_S2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_S2);
       break;
     case 0x31:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_S2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_S2);
       break;
     case 0x32:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_S2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_S2);
       break;
     case 0x34:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_U2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_U2);
       break;
     case 0x35:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_U2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_U2);
       break;
     case 0x36:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_U2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_U2);
       break;
     case 0x38:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_U2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_U2);
       break;
     case 0x39:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_U2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_U2);
       break;
     case 0x3A:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_U2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_U2);
       break;
     case 0x3C:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_AND2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_AND2);
       break;
     case 0x3D:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_AND2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_AND2);
       break;
     case 0x3E:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_AND2);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_AND2);
       break;
     case 0x40:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_ADD);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_ADD);
       break;
     case 0x41:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_ADD);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_ADD);
       break;
     case 0x42:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_ADD);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_ADD);
       break;
     case 0x44:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_TRUE3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_TRUE3);
       break;
     case 0x45:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_TRUE3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_TRUE3);
       break;
     case 0x46:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE3);
       break;
 	  case 0x47:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_ALWAYS3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_ALWAYS3);
       break;
     case 0x48:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_FALSE3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_FALSE3);
       break;
     case 0x49:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_FALSE3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_FALSE3);
       break;
     case 0x4a:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_FALSE3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_FALSE3);
       break;
     case 0x4c:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_S3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_S3);
       break;
     case 0x4d:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_S3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_S3);
       break;
     case 0x4e:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_S3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_S3);
       break;
     case 0x50:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_S3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_S3);
       break;
     case 0x51:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_S3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_S3);
       break;
     case 0x52:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_S3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_S3);
       break;
     case 0x54:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_U3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_LOWER_U3);
       break;
     case 0x55:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_U3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_LOWER_U3);
       break;
     case 0x56:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_U3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_LOWER_U3);
       break;
     case 0x58:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_U3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_HIGHER_U3);
       break;
     case 0x59:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_U3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_HIGHER_U3);
       break;
     case 0x5a:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_U3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_HIGHER_U3);
       break;
     case 0x5c:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_8_BIT_IF_AND3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_8_BIT_IF_AND3);
       break;
     case 0x5d:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_IF_AND3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_IF_AND3);
       break;
     case 0x5e:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_IF_AND3);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_AND3);
       break;
     case 0x63:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_16_BIT_WRITE_IOREGS);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_16_BIT_WRITE_IOREGS);
       break;
     case 0xE3:
-      cheatsAdd(cpu, code, desc, address, addr, value, 257, GSA_32_BIT_WRITE_IOREGS);
+      cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_WRITE_IOREGS);
       break;
     default:
-      cheatsAdd(cpu, code, desc, address, address, value, 257, UNKNOWN_CODE);
+      cheatsAdd(code, desc, address, address, value, 257, UNKNOWN_CODE);
       break;
     }
   } else {
@@ -1927,34 +1927,34 @@ void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3
     case 0:
     case 1:
     case 2:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 256, type);
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 256, type);
       break;
     case 3:
 	  switch ((address >> 0x10) & 0xFF){
 	  case 0x00:
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 256, GSA_GROUP_WRITE);
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 256, GSA_GROUP_WRITE);
 	    break;
 	  case 0x10:
-	    cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, address & 0xFF, 256, GSA_32_BIT_ADD );
+	    cheatsAdd(code, desc, address, value & 0x0FFFFFFF, address & 0xFF, 256, GSA_32_BIT_ADD );
 	    break;
 	  case 0x20:
-	    cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, (~(address & 0xFF)+1), 256, GSA_32_BIT_ADD );
+	    cheatsAdd(code, desc, address, value & 0x0FFFFFFF, (~(address & 0xFF)+1), 256, GSA_32_BIT_ADD );
 	    break;
 	  case 0x30:
-	    cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256, GSA_32_BIT_ADD );
+	    cheatsAdd(code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256, GSA_32_BIT_ADD );
 	    break;
 	  case 0x40:
-	    cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, (~(address & 0xFFFF)+1), 256, GSA_32_BIT_ADD );
+	    cheatsAdd(code, desc, address, value & 0x0FFFFFFF, (~(address & 0xFFFF)+1), 256, GSA_32_BIT_ADD );
 	    break;
 	  case 0x50:
-	    cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 256, GSA_32_BIT_ADD2);
+	    cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 256, GSA_32_BIT_ADD2);
 	    break;
 	  case 0x60:
-	    cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 256, GSA_32_BIT_SUB2);
+	    cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 256, GSA_32_BIT_SUB2);
 	    break;
       default:
         // unsupported code
-        cheatsAdd(cpu, code, desc, address, address, value, 256,
+        cheatsAdd(code, desc, address, address, value, 256,
                   UNKNOWN_CODE);
         break;
       }
@@ -1963,35 +1963,35 @@ void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3
       address <<= 1;
       type = (value >> 24) & 0xFF;
       if(type == 0x00) {
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
                   GSA_16_BIT_ROM_PATCH);
         break;
       }
       // unsupported code
-      cheatsAdd(cpu, code, desc, address, address, value, 256,
+      cheatsAdd(code, desc, address, address, value, 256,
                 UNKNOWN_CODE);
       break;
     case 8:
       switch((address >> 20) & 15) {
       case 1:
-        cheatsAdd(cpu, code, desc, address, address & 0x0F0FFFFF, value, 256,
+        cheatsAdd(code, desc, address, address & 0x0F0FFFFF, value, 256,
                   GSA_8_BIT_GS_WRITE);
         break;
       case 2:
-        cheatsAdd(cpu, code, desc, address, address & 0x0F0FFFFF, value, 256,
+        cheatsAdd(code, desc, address, address & 0x0F0FFFFF, value, 256,
                   GSA_16_BIT_GS_WRITE);
         break;
       case 4:
 		// This code is buggy : the value is always set to 0 !
-        cheatsAdd(cpu, code, desc, address, address & 0x0F0FFFFF, 0, 256,
+        cheatsAdd(code, desc, address, address & 0x0F0FFFFF, 0, 256,
                   GSA_32_BIT_GS_WRITE);
         break;
       case 15:
-        cheatsAdd(cpu, code, desc, address, 0, value & 0xFFFF, 256, GSA_SLOWDOWN);
+        cheatsAdd(code, desc, address, 0, value & 0xFFFF, 256, GSA_SLOWDOWN);
         break;
       default:
         // unsupported code
-        cheatsAdd(cpu, code, desc, address, address, value, 256,
+        cheatsAdd(code, desc, address, address, value, 256,
                   UNKNOWN_CODE);
         break;
       }
@@ -2000,70 +2000,70 @@ void cheatsAddGSACode(ARM7TDMI &cpu, const char *code, const char *desc, bool v3
       if(address != 0xDEADFACE) {
         switch((value >> 20) & 0xF) {
         case 0:
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
                   CBA_IF_TRUE);
           break;
         case 1:
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
                   CBA_IF_FALSE);
           break;
         case 2:
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
                   GSA_16_BIT_IF_LOWER_OR_EQ_U);
           break;
         case 3:
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value & 0xFFFF, 256,
                   GSA_16_BIT_IF_HIGHER_OR_EQ_U);
           break;
         default:
         // unsupported code
-        cheatsAdd(cpu, code, desc, address, address, value, 256,
+        cheatsAdd(code, desc, address, address, value, 256,
                   UNKNOWN_CODE);
           break;
 		}
       } else
-        cheatsAdd(cpu, code, desc, address, address, value, 256,
+        cheatsAdd(code, desc, address, address, value, 256,
                   UNKNOWN_CODE);
       break;
     case 0x0e:
       switch((value >> 28) & 0xF) {
       case 0:
-      cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
+      cheatsAdd(code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
                 GSA_16_BIT_MIF_TRUE);
         break;
       case 1:
-      cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
+      cheatsAdd(code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
                 GSA_16_BIT_MIF_FALSE);
         break;
       case 2:
-      cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
+      cheatsAdd(code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
                 GSA_16_BIT_MIF_LOWER_OR_EQ_U);
         break;
       case 3:
-      cheatsAdd(cpu, code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
+      cheatsAdd(code, desc, address, value & 0x0FFFFFFF, address & 0xFFFF, 256,
                 GSA_16_BIT_MIF_HIGHER_OR_EQ_U);
         break;
       default:
         // unsupported code
-        cheatsAdd(cpu, code, desc, address, address, value, 256,
+        cheatsAdd(code, desc, address, address, value, 256,
                   UNKNOWN_CODE);
         break;
       }
       break;
       case 0x0f:
-        cheatsAdd(cpu, code, desc, address, (address & 0xFFFFFFF), value, 256, MASTER_CODE);
+        cheatsAdd(code, desc, address, (address & 0xFFFFFFF), value, 256, MASTER_CODE);
         mastercode = (address & 0xFFFFFFF);
         break;
       default:
       // unsupported code
-      cheatsAdd(cpu, code, desc, address, address, value, 256,
+      cheatsAdd(code, desc, address, address, value, 256,
                 UNKNOWN_CODE);
       break;
     }
   }
 }
 
-bool cheatsImportGSACodeFile(ARM7TDMI &cpu, const char *name, int game, bool v3)
+bool cheatsImportGSACodeFile(const char *name, int game, bool v3)
 {
   FILE *f = fopen(name, "rb");
   if(!f)
@@ -2117,7 +2117,7 @@ bool cheatsImportGSACodeFile(ARM7TDMI &cpu, const char *name, int game, bool v3)
         fseek(f, 4, SEEK_CUR);
         fread(&code[8], 1, 8, f);
         code[16] = 0;
-        cheatsAddGSACode(cpu, code, desc, v3);
+        cheatsAddGSACode(code, desc, v3);
         len -= 2;
       }
       codes--;
@@ -2313,9 +2313,9 @@ void cheatsCBAChangeEncryption(u32 *seed)
   cheatsCBASeed[0] = cheatsCBAEncWorker();
   cheatsCBASeed[1] = cheatsCBAEncWorker();
 
-  *((uint32a *)&cheatsCBACurrentSeed[0]) = seed[6];
-  *((uint32a *)&cheatsCBACurrentSeed[4]) = seed[7];
-  *((uint32a *)&cheatsCBACurrentSeed[8]) = 0;
+  *((u32 *)&cheatsCBACurrentSeed[0]) = seed[6];
+  *((u32 *)&cheatsCBACurrentSeed[4]) = seed[7];
+  *((u32 *)&cheatsCBACurrentSeed[8]) = 0;
 }
 
 u16 cheatsCBAGenValue(u32 x, u32 y, u32 z)
@@ -2432,7 +2432,7 @@ bool cheatsCBAShouldDecrypt()
   return false;
 }
 
-void cheatsAddCBACode(ARM7TDMI &cpu, const char *code, const char *desc)
+void cheatsAddCBACode(const char *code, const char *desc)
 {
   if(strlen(code) != 13) {
     // wrong cheat
@@ -2477,12 +2477,12 @@ void cheatsAddCBACode(ARM7TDMI &cpu, const char *code, const char *desc)
   sscanf(buffer, "%x", &value);
 
   u8 array[8] = {
-  	u8(address & 255),
-    u8((address >> 8) & 255),
-    u8((address >> 16) & 255),
-    u8((address >> 24) & 255),
-    u8(value & 255),
-    u8((value >> 8) & 255),
+    address & 255,
+    (address >> 8) & 255,
+    (address >> 16) & 255,
+    (address >> 24) & 255,
+    (value & 255),
+    (value >> 8) & 255,
     0,
     0
   };
@@ -2492,7 +2492,7 @@ void cheatsAddCBACode(ARM7TDMI &cpu, const char *code, const char *desc)
     u32 seed[8];
     cheatsCBAParseSeedCode(address, value, seed);
     cheatsCBAChangeEncryption(seed);
-    cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 512, UNKNOWN_CODE);
+    cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 512, UNKNOWN_CODE);
   } else {
     if(cheatsCBAShouldDecrypt())
       cheatsCBADecrypt(array);
@@ -2503,7 +2503,7 @@ void cheatsAddCBACode(ARM7TDMI &cpu, const char *code, const char *desc)
     int type = (address >> 28) & 15;
 
     if(isMultilineWithData(cheatsNumber-1) || (super>0)) {
-      cheatsAdd(cpu, code, desc, address, address, value, 512, UNKNOWN_CODE);
+      cheatsAdd(code, desc, address, address, value, 512, UNKNOWN_CODE);
 	  if (super>0)
 		  super-= 1;
       return;
@@ -2514,76 +2514,76 @@ void cheatsAddCBACode(ARM7TDMI &cpu, const char *code, const char *desc)
       {
         if(!cheatsCBATableGenerated)
           cheatsCBAGenTable();
-        u32 crc = cheatsCBACalcCRC(cpu.gba->mem.rom, 0x10000);
+        u32 crc = cheatsCBACalcCRC(rom, 0x10000);
         if(crc != address) {
           systemMessage(MSG_CBA_CODE_WARNING,
                         N_("Warning: Codes seem to be for a different game.\nCodes may not work correctly."));
         }
-        cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 512,
+        cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 512,
                   UNKNOWN_CODE);
       }
       break;
     case 0x01:
-      cheatsAdd(cpu, code, desc, address, (address & 0x1FFFFFF) | 0x08000000, value, 512, MASTER_CODE);
+      cheatsAdd(code, desc, address, (address & 0x1FFFFFF) | 0x08000000, value, 512, MASTER_CODE);
       mastercode = (address & 0x1FFFFFF) | 0x08000000;
       break;
     case 0x02:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_OR);
       break;
     case 0x03:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 512,
                 INT_8_BIT_WRITE);
       break;
     case 0x04:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_SLIDE_CODE);
       break;
     case 0x05:
-		cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+		cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                   CBA_SUPER);
 		super = getCodeLength(cheatsNumber-1);
       break;
     case 0x06:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_AND);
       break;
     case 0x07:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_IF_TRUE);
       break;
     case 0x08:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 INT_16_BIT_WRITE);
       break;
     case 0x0a:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_IF_FALSE);
       break;
     case 0x0b:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_GT);
       break;
     case 0x0c:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 CBA_LT);
       break;
     case 0x0d:
 		if ((address & 0xF0)<0x30)
-      cheatsAdd(cpu, code, desc, address, address & 0xF0, value, 512,
+      cheatsAdd(code, desc, address, address & 0xF0, value, 512,
                 CBA_IF_KEYS_PRESSED);
       break;
     case 0x0e:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFF, value & 0x8000 ? value | 0xFFFF0000 : value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value & 0x8000 ? value | 0xFFFF0000 : value, 512,
                 CBA_ADD);
       break;
     case 0x0f:
-      cheatsAdd(cpu, code, desc, address, address & 0x0FFFFFFE, value, 512,
+      cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512,
                 GSA_16_BIT_IF_AND);
       break;
     default:
       // unsupported code
-      cheatsAdd(cpu, code, desc, address, address & 0xFFFFFFFF, value, 512,
+      cheatsAdd(code, desc, address, address & 0xFFFFFFFF, value, 512,
                 UNKNOWN_CODE);
       break;
     }
@@ -2896,6 +2896,3 @@ void cheatsWriteByte(u32, u8)
 #endif
 #endif
 }
-
-#undef debuggerReadHalfWord
-#undef debuggerWriteHalfWord

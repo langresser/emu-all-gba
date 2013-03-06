@@ -63,7 +63,7 @@ void agbPrintFlush()
     return;
   }
 
-  u8 *data = &gMem.rom[address];
+  u8 *data = &rom[address];
 
   while(get != put) {
     char c = data[get++];
@@ -78,6 +78,3 @@ void agbPrintFlush()
   }
   debuggerWriteHalfWord(0x9fe20fc, get);
 }
-
-#undef debuggerReadHalfWord
-#undef debuggerWriteHalfWord

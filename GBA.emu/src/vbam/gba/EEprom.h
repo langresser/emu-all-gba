@@ -5,7 +5,7 @@ extern void eepromSaveGame(gzFile _gzFile);
 extern void eepromReadGame(gzFile _gzFile, int version);
 extern void eepromReadGameSkip(gzFile _gzFile, int version);
 extern int eepromRead(u32 address);
-extern void eepromWrite(u32 address, u8 value, int cpuDmaCount);
+extern void eepromWrite(u32 address, u8 value);
 extern void eepromInit();
 extern void eepromReset();
 extern u8 eepromData[0x2000];

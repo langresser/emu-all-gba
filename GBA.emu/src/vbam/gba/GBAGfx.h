@@ -8,94 +8,77 @@
 
 //#define SPRITE_DEBUG
 
-static void gfxDrawTextScreen(u8 vram[0x20000], u16, u16, u16, u32 *,
-		const u16 VCOUNT, const u16 MOSAIC, const u16 *palette);
-static void gfxDrawRotScreen(u8 vram[0x20000], u16,
+static void gfxDrawTextScreen(u16, u16, u16, u32 *);
+static void gfxDrawRotScreen(u16,
 			     u16, u16,
 			     u16, u16,
 			     u16, u16,
 			     u16, u16,
 			     int&, int&,
 			     int,
-			     u32*,
-			     const u16 VCOUNT, const u16 MOSAIC, const u16 *palette);
-static void gfxDrawRotScreen16Bit(u8 vram[0x20000], u16,
+			     u32*);
+static void gfxDrawRotScreen16Bit(u16,
 				  u16, u16,
 				  u16, u16,
 				  u16, u16,
 				  u16, u16,
 				  int&, int&,
 				  int,
-				  u32*,
-				  u32 *line, const u16 VCOUNT, const u16 MOSAIC);
-static void gfxDrawRotScreen256(u8 vram[0x20000], u16,
+				  u32*);
+static void gfxDrawRotScreen256(u16,
 				u16, u16,
 				u16, u16,
 				u16, u16,
 				u16, u16,
 				int&, int&,
 				int,
-				u32*,
-				const u16 VCOUNT, const u16 MOSAIC, const u16 DISPCNT, const u16 *palette);
-static void gfxDrawRotScreen16Bit160(u8 vram[0x20000], u16,
+				u32*);
+static void gfxDrawRotScreen16Bit160(u16,
 				     u16, u16,
 				     u16, u16,
 				     u16, u16,
 				     u16, u16,
 				     int&, int&,
 				     int,
-				     u32*,
-				     u32 *line, const u16 VCOUNT, const u16 MOSAIC, const u16 DISPCNT);
-static void gfxDrawSprites(GBALCD &lcd, u32 *, const u16 VCOUNT, const u16 MOSAIC, const u16 DISPCNT);
+				     u32*);
+static void gfxDrawSprites(u32 *);
 static void gfxIncreaseBrightness(u32 *line, int coeff);
 static void gfxDecreaseBrightness(u32 *line, int coeff);
 static void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb);
 
-static const bool directColorLookup = 0;
-static MixColorType convColor(u16 c)
-{
-	if(directColorLookup)
-		return systemColorMap.map16[c];
-	else
-		return c;
-}
+void mode0RenderLine();
+void mode0RenderLineNoWindow();
+void mode0RenderLineAll();
 
-void mode0RenderLine(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode0RenderLineNoWindow(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode0RenderLineAll(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
+void mode1RenderLine();
+void mode1RenderLineNoWindow();
+void mode1RenderLineAll();
 
-void mode1RenderLine(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode1RenderLineNoWindow(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode1RenderLineAll(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
+void mode2RenderLine();
+void mode2RenderLineNoWindow();
+void mode2RenderLineAll();
 
-void mode2RenderLine(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode2RenderLineNoWindow(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode2RenderLineAll(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
+void mode3RenderLine();
+void mode3RenderLineNoWindow();
+void mode3RenderLineAll();
 
-void mode3RenderLine(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode3RenderLineNoWindow(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode3RenderLineAll(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
+void mode4RenderLine();
+void mode4RenderLineNoWindow();
+void mode4RenderLineAll();
 
-void mode4RenderLine(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode4RenderLineNoWindow(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode4RenderLineAll(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
+void mode5RenderLine();
+void mode5RenderLineNoWindow();
+void mode5RenderLineAll();
 
-void mode5RenderLine(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode5RenderLineNoWindow(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-void mode5RenderLineAll(MixColorType *, GBALCD &lcd, const GBAMem::IoMem &ioMem);
-
-static const int coeff[32] = {
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-  16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16};
-/*extern u32 line0[240];
+extern int coeff[32];
+extern u32 line0[240];
 extern u32 line1[240];
 extern u32 line2[240];
-extern u32 line3[240];*/
-//extern u32 lineOBJ[240];
-//extern u32 lineOBJWin[240];
-//extern u16 *lineMix;
-//extern u16 lineMix[240];
-/*extern bool gfxInWin0[240];
+extern u32 line3[240];
+extern u32 lineOBJ[240];
+extern u32 lineOBJWin[240];
+extern u32 lineMix[240];
+extern bool gfxInWin0[240];
 extern bool gfxInWin1[240];
 extern int lineOBJpixleft[128];
 
@@ -106,7 +89,7 @@ extern int gfxBG2X;
 extern int gfxBG2Y;
 extern int gfxBG3X;
 extern int gfxBG3Y;
-extern int gfxLastVCOUNT;*/
+extern int gfxLastVCOUNT;
 
 static inline void gfxClearArray(u32 *array)
 {
@@ -115,18 +98,29 @@ static inline void gfxClearArray(u32 *array)
   }
 }
 
-static inline void gfxDrawTextScreen(u8 vram[0x20000], u16 control, u16 hofs, u16 vofs,
-				     u32 *line, const u16 VCOUNT, const u16 MOSAIC, const u16 *palette)
+static inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
+				     u32 *line)
 {
-  const u8 *charBase = &vram[((control >> 2) & 0x03) * 0x4000];
-  const u16 *screenBase = (u16 *)&vram[((control >> 8) & 0x1f) * 0x800];
+  u16 *palette = (u16 *)paletteRAM;
+  u8 *charBase = &vram[((control >> 2) & 0x03) * 0x4000];
+  u16 *screenBase = (u16 *)&vram[((control >> 8) & 0x1f) * 0x800];
   u32 prio = ((control & 3)<<25) + 0x1000000;
-
-  static const int widthMap[4] = { 256, 512, 256, 512 };
-  static const int heightMap[4] = { 256, 256, 512, 512 };
-  u32 mapSize = (control >> 14) & 3;
-  int sizeX = widthMap[mapSize];
-  int sizeY = heightMap[mapSize];
+  int sizeX = 256;
+  int sizeY = 256;
+  switch((control >> 14) & 3) {
+  case 0:
+    break;
+  case 1:
+    sizeX = 512;
+    break;
+  case 2:
+    sizeY = 512;
+    break;
+  case 3:
+    sizeX = 512;
+    sizeY = 512;
+    break;
+  }
 
   int maskX = sizeX-1;
   int maskY = sizeY-1;
@@ -154,7 +148,7 @@ static inline void gfxDrawTextScreen(u8 vram[0x20000], u16 control, u16 hofs, u1
 
   int yshift = ((yyy>>3)<<5);
   if((control) & 0x80) {
-    const u16 *screenSource = screenBase + 0x400 * (xxx>>8) + ((xxx & 255)>>3) + yshift;
+    u16 *screenSource = screenBase + 0x400 * (xxx>>8) + ((xxx & 255)>>3) + yshift;
     for(int x = 0; x < 240; x++) {
       u16 data = READ16LE(screenSource);
 
@@ -188,7 +182,7 @@ static inline void gfxDrawTextScreen(u8 vram[0x20000], u16 control, u16 hofs, u1
       }
     }
   } else {
-    const u16 *screenSource = screenBase + 0x400*(xxx>>8)+((xxx&255)>>3) +
+    u16 *screenSource = screenBase + 0x400*(xxx>>8)+((xxx&255)>>3) +
       yshift;
     for(int x = 0; x < 240; x++) {
       u16 data = READ16LE(screenSource);
@@ -245,24 +239,35 @@ static inline void gfxDrawTextScreen(u8 vram[0x20000], u16 control, u16 hofs, u1
   }
 }
 
-static inline void gfxDrawRotScreen(u8 vram[0x20000], u16 control,
+static inline void gfxDrawRotScreen(u16 control,
 				    u16 x_l, u16 x_h,
 				    u16 y_l, u16 y_h,
 				    u16 pa,  u16 pb,
 				    u16 pc,  u16 pd,
 				    int& currentX, int& currentY,
 				    int changed,
-				    u32 *line,
-				    const u16 VCOUNT, const u16 MOSAIC, const u16 *palette)
+				    u32 *line)
 {
+  u16 *palette = (u16 *)paletteRAM;
   u8 *charBase = &vram[((control >> 2) & 0x03) * 0x4000];
   u8 *screenBase = (u8 *)&vram[((control >> 8) & 0x1f) * 0x800];
   int prio = ((control & 3) << 25) + 0x1000000;
 
-  static const int rotMap[4] = { 128, 256, 512, 1024 };
-  u32 mapSize = (control >> 14) & 3;
-  int sizeX = rotMap[mapSize];
-  int sizeY = rotMap[mapSize];
+  int sizeX = 128;
+  int sizeY = 128;
+  switch((control >> 14) & 3) {
+  case 0:
+    break;
+  case 1:
+    sizeX = sizeY = 256;
+    break;
+  case 2:
+    sizeX = sizeY = 512;
+    break;
+  case 3:
+    sizeX = sizeY = 1024;
+    break;
+  }
 
   int maskX = sizeX-1;
   int maskY = sizeY-1;
@@ -369,16 +374,16 @@ static inline void gfxDrawRotScreen(u8 vram[0x20000], u16 control,
   }
 }
 
-static inline void gfxDrawRotScreen16Bit(u8 vram[0x20000], u16 control,
+static inline void gfxDrawRotScreen16Bit(u16 control,
 					 u16 x_l, u16 x_h,
 					 u16 y_l, u16 y_h,
 					 u16 pa,  u16 pb,
 					 u16 pc,  u16 pd,
 					 int& currentX, int& currentY,
 					 int changed,
-					 u32 *line, const u16 VCOUNT, const u16 MOSAIC)
+					 u32 *line)
 {
-  const u16 *screenBase = (u16 *)&vram[0];
+  u16 *screenBase = (u16 *)&vram[0];
   int prio = ((control & 3) << 25) + 0x1000000;
   int sizeX = 240;
   int sizeY = 160;
@@ -466,17 +471,17 @@ static inline void gfxDrawRotScreen16Bit(u8 vram[0x20000], u16 control,
   }
 }
 
-static inline void gfxDrawRotScreen256(u8 vram[0x20000], u16 control,
+static inline void gfxDrawRotScreen256(u16 control,
 				       u16 x_l, u16 x_h,
 				       u16 y_l, u16 y_h,
 				       u16 pa,  u16 pb,
 				       u16 pc,  u16 pd,
 				       int &currentX, int& currentY,
 				       int changed,
-				       u32 *line,
-				       const u16 VCOUNT, const u16 MOSAIC, const u16 DISPCNT, const u16 *palette)
+				       u32 *line)
 {
-  const u8 *screenBase = (DISPCNT & 0x0010) ? &vram[0xA000] : &vram[0x0000];
+  u16 *palette = (u16 *)paletteRAM;
+  u8 *screenBase = (DISPCNT & 0x0010) ? &vram[0xA000] : &vram[0x0000];
   int prio = ((control & 3) << 25) + 0x1000000;
   int sizeX = 240;
   int sizeY = 160;
@@ -567,16 +572,16 @@ static inline void gfxDrawRotScreen256(u8 vram[0x20000], u16 control,
   }
 }
 
-static inline void gfxDrawRotScreen16Bit160(u8 vram[0x20000], u16 control,
+static inline void gfxDrawRotScreen16Bit160(u16 control,
 					    u16 x_l, u16 x_h,
 					    u16 y_l, u16 y_h,
 					    u16 pa,  u16 pb,
 					    u16 pc,  u16 pd,
 					    int& currentX, int& currentY,
 					    int changed,
-					    u32 *line, const u16 VCOUNT, const u16 MOSAIC, const u16 DISPCNT)
+					    u32 *line)
 {
-  const u16 *screenBase = (DISPCNT & 0x0010) ? (u16 *)&vram[0xa000] :
+  u16 *screenBase = (DISPCNT & 0x0010) ? (u16 *)&vram[0xa000] :
     (u16 *)&vram[0];
   int prio = ((control & 3) << 25) + 0x1000000;
   int sizeX = 160;
@@ -666,13 +671,8 @@ static inline void gfxDrawRotScreen16Bit160(u8 vram[0x20000], u16 control,
   }
 }
 
-static inline void gfxDrawSprites(GBALCD &lcd, u32 *lineOBJ, const u16 VCOUNT, const u16 MOSAIC, const u16 DISPCNT)
+static inline void gfxDrawSprites(u32 *lineOBJ)
 {
-	u8 (&paletteRAM)[0x400] = lcd.paletteRAM;
-	u8 (&vram)[0x20000] = lcd.vram;
-	u8 (&oam)[0x400] = lcd.oam;
-	unsigned int &layerEnable = lcd.layerEnable;
-
   // lineOBJpix is used to keep track of the drawn OBJs
   // and to stop drawing them if the 'maximum number of OBJ per line'
   // has been reached.
@@ -680,8 +680,8 @@ static inline void gfxDrawSprites(GBALCD &lcd, u32 *lineOBJ, const u16 VCOUNT, c
   int m=0;
   gfxClearArray(lineOBJ);
   if(layerEnable & 0x1000) {
-    const u16 *sprites = (u16 *)oam;
-    const u16 *spritePalette = &((u16 *)paletteRAM)[256];
+    u16 *sprites = (u16 *)oam;
+    u16 *spritePalette = &((u16 *)paletteRAM)[256];
     int mosaicY = ((MOSAIC & 0xF000)>>12) + 1;
     int mosaicX = ((MOSAIC & 0xF00)>>8) + 1;
     for(int x = 0; x < 128 ; x++) {
@@ -690,11 +690,11 @@ static inline void gfxDrawSprites(GBALCD &lcd, u32 *lineOBJ, const u16 VCOUNT, c
       u16 a2 = READ16LE(sprites++);
       sprites++;
 
-      lcd.lineOBJpixleft[x]=lineOBJpix;
+      lineOBJpixleft[x]=lineOBJpix;
 
       lineOBJpix-=2;
       if (lineOBJpix<=0)
-        break;
+        continue;
 
       if ((a0 & 0x0c00) == 0x0c00)
         a0 &=0xF3FF;
@@ -1134,26 +1134,21 @@ static inline void gfxDrawSprites(GBALCD &lcd, u32 *lineOBJ, const u16 VCOUNT, c
   }
 }
 
-static inline void gfxDrawOBJWin(GBALCD &lcd, u32 *lineOBJWin, const u16 VCOUNT, const u16 DISPCNT)
+static inline void gfxDrawOBJWin(u32 *lineOBJWin)
 {
-	u8 (&paletteRAM)[0x400] = lcd.paletteRAM;
-	u8 (&vram)[0x20000] = lcd.vram;
-	u8 (&oam)[0x400] = lcd.oam;
-	unsigned int &layerEnable = lcd.layerEnable;
-
   gfxClearArray(lineOBJWin);
   if((layerEnable & 0x9000) == 0x9000) {
-	const u16 *sprites = (u16 *)oam;
+    u16 *sprites = (u16 *)oam;
     // u16 *spritePalette = &((u16 *)paletteRAM)[256];
     for(int x = 0; x < 128 ; x++) {
-      int lineOBJpix = lcd.lineOBJpixleft[x];
+      int lineOBJpix = lineOBJpixleft[x];
       u16 a0 = READ16LE(sprites++);
       u16 a1 = READ16LE(sprites++);
       u16 a2 = READ16LE(sprites++);
       sprites++;
 
       if (lineOBJpix<=0)
-        break;
+        continue;
 
       // ignores non OBJ-WIN and disabled OBJ-WIN
       if(((a0 & 0x0c00) != 0x0800) || ((a0 & 0x0300) == 0x0200))
@@ -1209,7 +1204,7 @@ static inline void gfxDrawOBJWin(GBALCD &lcd, u32 *lineOBJWin, const u16 VCOUNT,
             lineOBJpix-=8;
             // int t2 = t - (fieldY >> 1);
             int rot = (a1 >> 9) & 0x1F;
-            const u16 *OAM = (u16 *)oam;
+            u16 *OAM = (u16 *)oam;
             int dx = READ16LE(&OAM[3 + (rot << 4)]);
             if(dx & 0x8000)
               dx |= 0xFFFF8000;

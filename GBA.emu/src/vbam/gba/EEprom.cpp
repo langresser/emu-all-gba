@@ -1,8 +1,9 @@
-#include <string.h>
 #include <memory.h>
 #include "GBA.h"
 #include "EEprom.h"
 #include "../Util.h"
+
+extern int cpuDmaCount;
 
 int eepromMode = EEPROM_IDLE;
 int eepromByte = 0;
@@ -13,7 +14,7 @@ u8 eepromBuffer[16];
 bool eepromInUse = false;
 int eepromSize = 512;
 
-static const variable_desc eepromSaveData[] = {
+variable_desc eepromSaveData[] = {
   { &eepromMode, sizeof(int) },
   { &eepromByte, sizeof(int) },
   { &eepromBits , sizeof(int) },
@@ -104,7 +105,7 @@ int eepromRead(u32 /* address */)
   return 1;
 }
 
-void eepromWrite(u32 /* address */, u8 value, int cpuDmaCount)
+void eepromWrite(u32 /* address */, u8 value)
 {
   if(cpuDmaCount == 0)
     return;
