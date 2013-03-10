@@ -15,6 +15,8 @@
 #import <OpenGLES/EAGLDrawable.h>
 #import <Foundation/NSPathUtilities.h>
 
+#include "platform_util.h"
+
 namespace Base
 {
 	static UIWindow *devWindow;
@@ -33,18 +35,6 @@ static CGAffineTransform makeTransformForOrientation(uint orientation)
 		case VIEW_ROTATE_180: return CGAffineTransformMakeRotation(M_PI);
 	}
 }
-
-
-#if defined(CONFIG_INPUT) && defined(IPHONE_VKEYBOARD)
-namespace Input
-{
-	//static UITextView *vkbdField = nil;
-	static UITextField *vkbdField = nil;
-	//static bool inVKeyboard = 0;
-	static InputTextDelegate vKeyboardTextDelegate;
-	static Rect2<int> textRect(8, 200, 8+304, 200+48);
-}
-#endif
 
 #ifdef CONFIG_INPUT
 	#include "input.h"
@@ -85,28 +75,6 @@ static ICadeHelper iCade = { nil };
 // used on iOS 4.0+
 static UIViewController *viewCtrl;
 
-#ifdef IPHONE_IMG_PICKER
-	static UIImagePickerController* imagePickerController;
-	static IPhoneImgPickerCallback imgPickCallback = NULL;
-	static void *imgPickUserPtr = NULL;
-	static NSData *imgPickData[2];
-	static uchar imgPickDataElements = 0;
-	#include "imagePicker.h"
-#endif
-
-#ifdef IPHONE_MSG_COMPOSE
-	static MFMailComposeViewController *composeController;
-	#include "mailCompose.h"
-#endif
-
-#ifdef IPHONE_GAMEKIT
-	#include "gameKit.h"
-#endif
-
-#ifdef GREYSTRIPE
-    #include "greystripe.h"
-#endif
-
 static const int USE_DEPTH_BUFFER = 0;
 static int openglViewIsInit = 0;
 
@@ -115,7 +83,7 @@ void cancelCallback(CallbackRef *ref)
 	if(ref)
 	{
 		logMsg("cancelling callback with ref %p", ref);
-		[NSObject cancelPreviousPerformRequestsWithTarget:mainApp selector:@selector(timerCallback:) object:(id)ref];
+		[NSObject cancelPreviousPerformRequestsWithTarget:mainApp selector:@selector(timerCallback:) object:(__bridge id)ref];
 	}
 }
 
@@ -126,8 +94,7 @@ CallbackRef *callbackAfterDelay(CallbackDelegate callback, int ms)
 	NSData *callbackArg = [[NSData alloc] initWithBytes:&del length:sizeof(del)];
 	assert(callbackArg);
 	[mainApp performSelector:@selector(timerCallback:) withObject:(id)callbackArg afterDelay:(float)ms/1000.];
-	[callbackArg release];
-	return (CallbackRef*)callbackArg;
+	return (__bridge CallbackRef*)callbackArg;
 }
 
 void openGLUpdateScreen()
@@ -341,9 +308,6 @@ uint appState = APP_RUNNING;
 	{
 		[EAGLContext setCurrentContext:nil];
 	}
-
-	[context release];
-	[super dealloc];
 }
 
 #ifdef CONFIG_INPUT
@@ -431,7 +395,6 @@ uint appState = APP_RUNNING;
 	if(Base::iCade.isActive())
 		Base::iCade.insertText(text);
 	#endif
-	//logMsg("got text %s", [text cStringUsingEncoding: NSUTF8StringEncoding]);
 }
 
 - (void)deleteBackward { }
@@ -478,23 +441,10 @@ uint appState = APP_RUNNING;
 
 - (void)keyboardWasShown:(NSNotification *)notification
 {
-	return;
-	using namespace Base;
-	#ifndef NDEBUG
-	CGSize keyboardSize = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-	logMsg("keyboard shown with size %d", (int)keyboardSize.height * pointScale);
-	int visibleY = IG::max(1, int(mainWin.rect.y2 - keyboardSize.height * pointScale));
-	float visibleFraction = visibleY / mainWin.rect.y2;
-	#endif
-	displayNeedsUpdate();
 }
 
 - (void) keyboardWillHide:(NSNotification *)notification
 {
-	return;
-	using namespace Base;
-	logMsg("keyboard hidden");
-	displayNeedsUpdate();
 }
 
 static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
@@ -518,7 +468,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	// based on iPhone/iPod DPI of 163 (326 retina)
 	uint unscaledDPI = 163;
 	#if !defined(__ARM_ARCH_6K__) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= 30200)
-	logMsg("testing for iPad");
 	if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
 	{
 		// based on iPad DPI of 132 (264 retina) 
@@ -562,14 +511,11 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	{
 		viewCtrl = [[ImagineUIViewController alloc] init];
 		viewCtrl.view = glView;
-		[glView release];
 		devWindow.rootViewController = viewCtrl;
-		[viewCtrl release];
 	}
 	else
 	{
 		[devWindow addSubview:glView];
-		[glView release];
 	}
 
 	[devWindow makeKeyAndVisible];
@@ -653,12 +599,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	processAppMsg(msg.type, msg.shortArg, msg.intArg, msg.intArg2);
 }
 
-- (void)dealloc
-{
-	[Base::devWindow release];
-	[super dealloc];
-}
-
 -(void)onRecNewMsg:(NSNotification*)notification
 {
     NSArray * newReplies = [notification.userInfo objectForKey:@"newReplies"];
@@ -731,11 +671,7 @@ static void setViewportForStatusbar(UIApplication *sharedApp)
 void setStatusBarHidden(uint hidden)
 {
 	auto sharedApp = [UIApplication sharedApplication];
-	#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 30200
-		[sharedApp setStatusBarHidden: hidden ? YES : NO withAnimation: UIStatusBarAnimationFade];
-	#else
-		[sharedApp setStatusBarHidden: hidden ? YES : NO animated:YES];
-	#endif
+	[sharedApp setStatusBarHidden: hidden ? YES : NO withAnimation: UIStatusBarAnimationFade];
 	setViewportForStatusbar(sharedApp);
 	generic_resizeEvent(mainWin);
 }
@@ -755,12 +691,6 @@ static UIInterfaceOrientation gfxOrientationToUIInterfaceOrientation(uint orient
 void setSystemOrientation(uint o)
 {
 	using namespace Input;
-	if(vKeyboardTextDelegate.hasCallback()) // TODO: allow orientation change without aborting text input
-	{
-		logMsg("aborting active text input");
-		vKeyboardTextDelegate.invoke(nullptr);
-		vKeyboardTextDelegate.clear();
-	}
 	auto sharedApp = [UIApplication sharedApplication];
 	[sharedApp setStatusBarOrientation:gfxOrientationToUIInterfaceOrientation(o) animated:YES];
 	setViewportForStatusbar(sharedApp);
@@ -789,7 +719,6 @@ void exitVal(int returnVal)
 	onExit(0);
 	::exit(returnVal);
 }
-void abort() { ::abort(); }
 
 void displayNeedsUpdate()
 {
@@ -798,12 +727,6 @@ void displayNeedsUpdate()
 	{
 		Base::startAnimation();
 	}
-}
-
-void openURL(const char *url)
-{
-	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:
-		[NSString stringWithCString:url encoding:NSASCIIStringEncoding]]];
 }
 
 void setIdleDisplayPowerSave(bool on)
@@ -819,7 +742,6 @@ void sendMessageToMain(ThreadPThread &, int type, int shortArg, int intArg, int 
 	[mainApp performSelectorOnMainThread:@selector(handleThreadMessage:)
 		withObject:arg
 		waitUntilDone:NO];
-	[arg release];
 }
 
 static const char *docPath = 0;
@@ -867,13 +789,10 @@ int main(int argc, char *argv[])
 	
 	doOrExit(logger_init());
 	TimeMach::setTimebase();
-
-	#ifdef CONFIG_FS
 	FsPosix::changeToAppDir(argv[0]);
-	#endif
 
-	NSAutoreleasePool *pool = [NSAutoreleasePool new];
-	int retVal = UIApplicationMain(argc, argv, nil, @"MainApp");
-	[pool release];
-	return retVal;
+    @autoreleasepool {
+        int retVal = UIApplicationMain(argc, argv, nil, @"MainApp");
+        return retVal;
+    }
 }

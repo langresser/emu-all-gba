@@ -1,9 +1,9 @@
 #pragma once
-#include "platform_util.h"
 
 #ifdef __cplusplus
 extern "C"
 #endif
+
 int isPad();
 
 void getScreenSize(int* width, int* height);

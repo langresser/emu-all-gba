@@ -34,7 +34,6 @@ CLINK void PNGAPI EVISIBLE png_error(png_structp png_ptr, png_const_charp error_
 {
 	// TODO: print out more verbose error
 	logMsg("fatal libpng error");
-	Base::abort();
 }
 
 CLINK void PNGAPI EVISIBLE png_chunk_error(png_structp png_ptr, png_const_charp error_message)

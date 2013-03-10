@@ -40,7 +40,7 @@
 		17DB137116E65A8F00B8D346 /* VController.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB135616E65A8F00B8D346 /* VController.cc */; };
 		17DB137216E65A8F00B8D346 /* VideoImageOverlay.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB135716E65A8F00B8D346 /* VideoImageOverlay.cc */; };
 		17DB17C616E65A9F00B8D346 /* coreaudio.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB150B16E65A9E00B8D346 /* coreaudio.cc */; };
-		17DB17F416E65A9F00B8D346 /* iphone.mm in Sources */ = {isa = PBXBuildFile; fileRef = 17DB155916E65A9E00B8D346 /* iphone.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		17DB17F416E65A9F00B8D346 /* iphone.mm in Sources */ = {isa = PBXBuildFile; fileRef = 17DB155916E65A9E00B8D346 /* iphone.mm */; };
 		17DB180E16E65A9F00B8D346 /* reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB159816E65A9E00B8D346 /* reader.cc */; };
 		17DB181016E65A9F00B8D346 /* Fs.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB159D16E65A9E00B8D346 /* Fs.cc */; };
 		17DB181216E65A9F00B8D346 /* FsPosix.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB15A116E65A9E00B8D346 /* FsPosix.cc */; };

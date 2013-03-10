@@ -27,10 +27,9 @@
 	namespace Base
 	{
 		void exitVal(int returnVal) ATTRS(noreturn);
-		void abort() ATTRS(noreturn);
 	}
 	#define BRANCH_PRINTF(str, ...) logErr(str, ## __VA_ARGS__)
-	#define BRANCH_EXIT() Base::abort()
+	#define BRANCH_EXIT() 
 #endif
 
 #ifdef IMAGINE_SRC

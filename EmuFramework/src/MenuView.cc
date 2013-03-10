@@ -223,16 +223,6 @@ void btStatus(uint status, int arg)
 	}
 }
 
-#ifdef CONFIG_BTSTACK
-
-void confirmBluetoothScanAlert(const Input::Event &e)
-{
-	logMsg("launching Cydia");
-	Base::openURL("cydia://package/ch.ringwald.btstack");
-}
-
-#endif
-
 void bluetoothScanHandler(TextMenuItem &, const Input::Event &e)
 {
 	if(Bluetooth::initBT() == OK)

@@ -125,7 +125,6 @@ void CollectTextInputView::init(const char *msgText, const char *initialContent)
 	textEntry.init(initialContent, View::defaultFace);
 	textEntry.setAcceptingInput(1);
 	#else
-	Input::startSysTextInput(Input::InputTextDelegate::create<CollectTextInputView, &CollectTextInputView::gotText>(this), initialContent, msgText);
 	#endif
 }
 
@@ -155,7 +154,6 @@ void CollectTextInputView::deinit()
 	#ifndef CONFIG_INPUT_SYSTEM_CAN_COLLECT_TEXT
 	textEntry.deinit();
 	#else
-	Input::cancelSysTextInput();
 	#endif
 }
 
@@ -178,9 +176,6 @@ void CollectTextInputView::place()
 	textRect.setPosRel(rect.xPos(C2DO), rect.yPos(C2DO), xSize, ySize, C2DO);
 	textEntry.place(textRect);
 	#else
-	//a.setPos(gXPos(rect, C2DO), gYPos(rect, C2DO) + proj.h/4., C2DO, C2DO);
-	textRect.setPosRel(rect.xPos(C2DO), rect.yPos(C2DO) - Gfx::viewPixelHeight()/4, xSize, ySize, C2DO);
-	Input::placeSysTextInput(textRect);
 	#endif
 }
 
@@ -231,6 +226,5 @@ void CollectTextInputView::draw()
 	#else
 	setColor(COLOR_WHITE);
 	resetTransforms();
-	message.draw(0, gYPos(Input::sysTextInputRect(), C2DO) + message.nominalHeight, CB2DO, C2DO);
 	#endif
 }

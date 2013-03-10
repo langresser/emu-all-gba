@@ -59,7 +59,6 @@ const Window &window();
 // App exit
 void exitVal(int returnVal) ATTRS(noreturn);
 static void exit() { exitVal(0); }
-void abort() ATTRS(noreturn);
 
 // drag & drop
 #if defined (CONFIG_BASE_X11)

@@ -184,10 +184,7 @@ void FSPicker::draw()
 	using namespace Gfx;
 	setColor(COLOR_WHITE);
 	tbl.draw();
-	/*gfx_resetTransforms();
-	gfx_setBlendMode(GFX_BLEND_MODE_ALPHA);
-	gfx_setColor(1., 0, 0, .25);
-	GeomRect::draw(&tableFrame, 1.);*/
+
 	navV.draw();
 }
 
