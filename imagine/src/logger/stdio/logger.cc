@@ -39,7 +39,7 @@ static const char *externalLogPath()
 	#ifdef CONFIG_BASE_IOS
 		const char *prefix = "/var/mobile";
 	#elif defined(CONFIG_BASE_ANDROID)
-		const char *prefix = Base::storagePath();
+		const char *prefix = Base::documentsPath();
 	#elif defined(CONFIG_ENV_WEBOS)
 		const char *prefix = "/media/internal";
 	#else

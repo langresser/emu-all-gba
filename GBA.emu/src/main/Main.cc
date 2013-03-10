@@ -241,9 +241,6 @@ int EmuSystem::saveState()
 {
 	FsSys::cPath saveStr;
 	sprintStateFilename(saveStr, saveStateSlot);
-	#ifdef CONFIG_BASE_IOS_SETUID
-		fixFilePermissions(saveStr);
-	#endif
 	if(CPUWriteState(gGba, saveStr))
 		return STATE_RESULT_OK;
 	else
@@ -266,9 +263,6 @@ void EmuSystem::saveAutoState()
 	{
 		FsSys::cPath saveStr;
 		sprintStateFilename(saveStr, -1);
-		#ifdef CONFIG_BASE_IOS_SETUID
-			fixFilePermissions(saveStr);
-		#endif
 		CPUWriteState(gGba, saveStr);
 	}
 }
@@ -280,9 +274,6 @@ void EmuSystem::saveBackupMem()
 		logMsg("saving backup memory");
 		FsSys::cPath saveStr;
 		snprintf(saveStr, sizeof(saveStr), "%s/%s.sav", savePath(), gameName);
-		#ifdef CONFIG_BASE_IOS_SETUID
-			fixFilePermissions(saveStr);
-		#endif
 		CPUWriteBatteryFile(gGba, saveStr);
 	}
 }
@@ -347,7 +338,6 @@ u16 *systemObtainSoundBuffer(uint samples, uint &buffSamples, void *&ctx)
 
 void systemCommitSoundBuffer(uint writtenSamples, void *&ctx)
 {
-	//logMsg("%d audio frames", writtenSamples/2);
 	Audio::commitPlayBuffer((Audio::BufferContext*)ctx, writtenSamples/2);
 }
 #else

@@ -639,7 +639,7 @@ static void writeConfig2(Io *io)
 	{
 		logErr("option string too long to write");
 	}
-	else if(!string_equal(FsSys::workDir(), Base::storagePath()))
+	else if(!string_equal(FsSys::workDir(), Base::documentsPath()))
 	{
 		logMsg("saving current directory: %s", FsSys::workDir());
 		io->writeVar((uint16)(2 + len));
@@ -664,7 +664,7 @@ void loadConfigFile()
 	#endif
 	if(!readConfig2(IoSys::open(configFilePath)))
 	{
-		FsSys::chdir(Base::storagePath());
+		FsSys::chdir(Base::documentsPath());
 	}
 }
 
@@ -674,9 +674,6 @@ void saveConfigFile()
 	#ifdef CONFIG_BASE_USES_SHARED_DOCUMENTS_DIR
 	snprintf(configFilePath, sizeof(configFilePath), "%s/explusalpha.com", Base::documentsPath());
 	FsSys::mkdir(configFilePath);
-	/*#ifdef CONFIG_BASE_IOS_SETUID
-	fixFilePermissions(configFilePath);
-	#endif*/
 	snprintf(configFilePath, sizeof(configFilePath), "%s/explusalpha.com/" CONFIG_FILE_NAME, Base::documentsPath());
 	#else
 	snprintf(configFilePath, sizeof(configFilePath), "%s/" CONFIG_FILE_NAME, Base::documentsPath());

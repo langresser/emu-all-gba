@@ -132,29 +132,6 @@ int EmuSystem::setupFrameSkip(uint optionVal)
 		}
 		return skip;
 	}
-
-	/*uint skip = 0;
-	gfx_updateFrameTime();
-	//logMsg("%d real frames passed", gfx_frameTimeRel);
-	if(gfx_frameTimeRel > 1)
-	{
-		skip = min(gfx_frameTimeRel - 1, maxFrameSkip);
-		if(skip && Audio::framesFree() < Audio::maxRate/12)
-		{
-			logMsg("not skipping %d frames from full audio buffer", skip);
-			skip = 0;
-		}
-		else
-		{
-			logMsg("skipping %u frames", skip);
-		}
-	}
-	if(gfx_frameTimeRel == 0)
-	{
-		logMsg("no frames passed");
-		return -1;
-	}
-	return skip;*/
 }
 
 void EmuSystem::setupGamePaths(const char *filePath)
@@ -173,9 +150,6 @@ void EmuSystem::setupGamePaths(const char *filePath)
 		}
 		strcpy(gamePath, realPath); // destination is always large enough
 		logMsg("set game directory: %s", gamePath);
-		#ifdef CONFIG_BASE_IOS_SETUID
-			fixFilePermissions(gamePath);
-		#endif
 	}
 
 	{

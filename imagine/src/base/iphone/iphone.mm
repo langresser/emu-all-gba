@@ -132,8 +132,6 @@ CallbackRef *callbackAfterDelay(CallbackDelegate callback, int ms)
 
 void openGLUpdateScreen()
 {
-	//logMsg("doing swap");
-	//glBindRenderbufferOES(GL_RENDERBUFFER_OES, viewRenderbuffer);
 	[Base::mainContext presentRenderbuffer:GL_RENDERBUFFER_OES];
 }
 
@@ -218,10 +216,6 @@ uint appState = APP_RUNNING;
 
 	self.multipleTouchEnabled = YES;
 	eaglLayer.opaque = YES;
-	//eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
-	//	[NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking,
-	//	kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
-
 	context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
 	assert(context);
 	int ret = [EAGLContext setCurrentContext:context];
@@ -274,11 +268,6 @@ uint appState = APP_RUNNING;
 
 - (void)drawView
 {
-	/*TimeSys now;
-	now.setTimeNow();
-	logMsg("frame time stamp %f, duration %f, now %f", displayLink.timestamp, displayLink.duration, (float)now);*/
-	//[EAGLContext setCurrentContext:context];
-	//glBindFramebufferOES(GL_FRAMEBUFFER_OES, viewFramebuffer);
 	if(unlikely(!Base::displayLinkActive))
 		return;
 
@@ -295,7 +284,6 @@ uint appState = APP_RUNNING;
 {
 	logMsg("in layoutSubviews");
 	[self drawView];
-	//logMsg("exiting layoutSubviews");
 }
 
 
@@ -463,22 +451,6 @@ uint appState = APP_RUNNING;
 @implementation MainApp
 
 #if defined(CONFIG_INPUT) && defined(IPHONE_VKEYBOARD)
-/*- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
-{
-	if (textView.text.length >= 127 && range.length == 0)
-	{
-		logMsg("not changing text");
-		return NO;
-	}
-	return YES;
-}
-
-- (void)textViewDidEndEditing:(UITextView *)textView
-{
-	logMsg("editing ended");
-	Input::finishSysTextInput();
-}*/
-
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
 	logMsg("pushed return");
@@ -513,11 +485,6 @@ uint appState = APP_RUNNING;
 	logMsg("keyboard shown with size %d", (int)keyboardSize.height * pointScale);
 	int visibleY = IG::max(1, int(mainWin.rect.y2 - keyboardSize.height * pointScale));
 	float visibleFraction = visibleY / mainWin.rect.y2;
-	/*if(isIPad)
-		Gfx::viewMMHeight_ = 197. * visibleFraction;
-	else
-		Gfx::viewMMHeight_ = 75. * visibleFraction;*/
-	//generic_resizeEvent(mainWin.rect.x2, visibleY);
 	#endif
 	displayNeedsUpdate();
 }
@@ -529,33 +496,6 @@ uint appState = APP_RUNNING;
 	logMsg("keyboard hidden");
 	displayNeedsUpdate();
 }
-
-/*- (void) screenDidConnect:(NSNotification *)aNotification
-{
-	logMsg("New screen connected");
-	UIScreen *screen = [aNotification object];
-	UIScreenMode *mode = [[screen availibleModes] lastObject];
-	screen.currentMode = mode;
-	if(!externalWindow)
-	{
-		externalWindow = [UIWindow alloc];
-	}
-	CGRect rect = CGRectMake(0, 0, mode.size.width, mode.size.height);
-	[externalWindow initWithFrame:rect];
-	externalWindow.screen = screen;
-	[externalWindow makeKeyAndVisible];
-}
- 
-- (void) screenDidDisconnect:(NSNotification *)aNotification
-{
-	logMsg("Screen dis-connected");
-}
- 
-- (void) screenModeDidChange:(NSNotification *)aNotification
-{
-	UIScreen *screen = [aNotification object];
-	logMsg("Screen-mode change"); // [screen currentMode]
-}*/
 
 static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 {
@@ -572,29 +512,7 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
 	using namespace Base;
-	NSString *currSysVer = [[UIDevice currentDevice] systemVersion];
-	#ifndef NDEBUG
-	logMsg("in applicationDidFinishLaunching(), UUID %s", [[[UIDevice currentDevice] uniqueIdentifier] cStringUsingEncoding: NSASCIIStringEncoding]);
-	logMsg("iOS version %s", [currSysVer cStringUsingEncoding: NSASCIIStringEncoding]);
-	#endif
 	mainApp = self;
-	
-	// unused for now since ARMv7 build now requires 4.3
-	/*NSString *reqSysVer = @"4.0";
-	if ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending)
-	{
-		//logMsg("enabling iOS 4 features");
-		usingiOS4 = 1;
-	}*/
-	
-	/*if ([currSysVer compare:@"3.2" options:NSNumericSearch] != NSOrderedAscending)
-	{
-		logMsg("enabling iOS 3.2 external display features");
-		NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-		[center addObserver:self selector:@selector(screenDidConnect:) name:UIScreenDidConnectNotification object:nil];
-		[center addObserver:self selector:@selector(screenDidDisconnect:) name:UIScreenDidDisconnectNotification object:nil];
-		[center addObserver:self selector:@selector(screenModeDidChange:) name:UIScreenModeDidChangeNotification object:nil];
-	}*/
 	
 	// TODO: get real DPI if possible
 	// based on iPhone/iPod DPI of 163 (326 retina)
@@ -607,12 +525,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 		unscaledDPI = 132;
 		isIPad = 1;
 		logMsg("running on iPad");
-		
-		/*rotateView = preferedOrientation = iOSOrientationToGfx([[UIDevice currentDevice] orientation]);
-		logMsg("started in %s orientation", Gfx::orientationName(rotateView));
-		#ifdef CONFIG_INPUT
-			Gfx::configureInputForOrientation();
-		#endif*/
 	}
 	#endif
 
@@ -644,25 +556,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	Base::engineInit();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	Base::setAutoOrientation(1);
-    
-    /*{
-    	mach_port_t mp;
-	    IOMasterPort(MACH_PORT_NULL,&mp);
-	    CFMutableDictionaryRef bt_matching = IOServiceNameMatching("bluetooth");
-	    mach_port_t bt_service = IOServiceGetMatchingService(mp, bt_matching);
-	
-	    // local-mac-address
-	    bd_addr_t address;
-	    CFTypeRef local_mac_address_ref = IORegistryEntrySearchCFProperty(bt_service,"IODeviceTree",CFSTR("local-mac-address"), kCFAllocatorDefault, 1);
-	    CFDataGetBytes(local_mac_address_ref,CFRangeMake(0,CFDataGetLength(local_mac_address_ref)),addr); // buffer needs to be unsigned char
-	
-	    IOObjectRelease(bt_service);
-	    
-	    // dump info
-	    char bd_addr_to_str_buffer[6*3];
-	    sprintf(bd_addr_to_str_buffer, "%02x:%02x:%02x:%02x:%02x:%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-	    log_info("local-mac-address: %s\n", bd_addr_to_str_buffer);
-    }*/
 	
 	// view controller init
 	if(usingiOS4)
@@ -681,6 +574,12 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 
 	[devWindow makeKeyAndVisible];
 	logMsg("exiting applicationDidFinishLaunching");
+    
+    [MobClick startWithAppkey:kUMengAppKey];
+    [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];
+	[[DianJinOfferPlatform defaultPlatform] setOfferViewColor:kDJBrownColor];
+    [UMFeedback checkWithAppkey:kUMengAppKey];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onRecNewMsg:) name:UMFBCheckFinishedNotification object:nil];
 }
 
 - (void)orientationChanged:(NSNotification *)notification
@@ -719,7 +618,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 {
 	using namespace Base;
 	logMsg("app exiting");
-	//Base::stopAnimation();
 	Base::appState = APP_EXITING;
 	Base::onExit(0);
 }
@@ -758,9 +656,31 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 - (void)dealloc
 {
 	[Base::devWindow release];
-	//[glView release]; // retained in devWindow
 	[super dealloc];
 }
+
+-(void)onRecNewMsg:(NSNotification*)notification
+{
+    NSArray * newReplies = [notification.userInfo objectForKey:@"newReplies"];
+    if (!newReplies) {
+        return;
+    }
+    
+    UIAlertView *alertView;
+    NSString *title = [NSString stringWithFormat:@"有%d条新回复", [newReplies count]];
+    NSMutableString *content = [NSMutableString string];
+    for (int i = 0; i < [newReplies count]; i++) {
+        NSString * dateTime = [[newReplies objectAtIndex:i] objectForKey:@"datetime"];
+        NSString *_content = [[newReplies objectAtIndex:i] objectForKey:@"content"];
+        [content appendString:[NSString stringWithFormat:@"%d: %@---%@\n", i+1, _content, dateTime]];
+    }
+    
+    alertView = [[UIAlertView alloc] initWithTitle:title message:content delegate:self cancelButtonTitle:@"确定" otherButtonTitles:nil];
+    ((UILabel *) [[alertView subviews] objectAtIndex:1]).textAlignment = NSTextAlignmentLeft ;
+    [alertView show];
+    
+}
+
 
 @end
 
@@ -908,53 +828,17 @@ const char *documentsPath()
 {
 	if(!docPath)
 	{
-		#ifdef CONFIG_BASE_IOS_JB
-			return "/User/Library/Preferences";
-		#else
-			NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-			NSString *documentsDirectory = [paths objectAtIndex:0];
-			docPath = strdup([documentsDirectory cStringUsingEncoding: NSASCIIStringEncoding]);
-		#endif
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        docPath = strdup([documentsDirectory cStringUsingEncoding: NSASCIIStringEncoding]);
 	}
 	return docPath;
-}
-
-const char *storagePath()
-{
-	#ifdef CONFIG_BASE_IOS_JB
-		return "/User/Media";
-	#else
-		return documentsPath();
-	#endif
 }
 
 int runningDeviceType()
 {
 	return isIPad ? DEV_TYPE_IPAD : DEV_TYPE_GENERIC;
 }
-
-#ifdef CONFIG_BASE_IOS_SETUID
-
-uid_t realUID = 0, effectiveUID = 0;
-static void setupUID()
-{
-	realUID = getuid();
-	effectiveUID = geteuid();
-	seteuid(realUID);
-}
-
-void setUIDReal()
-{
-	seteuid(Base::realUID);
-}
-
-bool setUIDEffective()
-{
-	return seteuid(Base::effectiveUID) == 0;
-}
-
-#endif
-
 }
 
 #ifdef CONFIG_INPUT_ICADE
@@ -980,21 +864,9 @@ double TimeMach::timebaseNSec = 0, TimeMach::timebaseUSec = 0,
 int main(int argc, char *argv[])
 {
 	using namespace Base;
-	#ifdef CONFIG_BASE_IOS_SETUID
-	setupUID();
-	#endif
 	
 	doOrExit(logger_init());
 	TimeMach::setTimebase();
-	
-	#ifdef CONFIG_BASE_IOS_SETUID
-	logMsg("real UID %d, effective UID %d", realUID, effectiveUID);
-	if(access("/Library/MobileSubstrate/DynamicLibraries/Backgrounder.dylib", F_OK) == 0)
-	{
-		logMsg("manually loading Backgrounder.dylib");
-		dlopen("/Library/MobileSubstrate/DynamicLibraries/Backgrounder.dylib", RTLD_LAZY | RTLD_GLOBAL);
-	}
-	#endif
 
 	#ifdef CONFIG_FS
 	FsPosix::changeToAppDir(argv[0]);

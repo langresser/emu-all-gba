@@ -233,20 +233,8 @@ void confirmBluetoothScanAlert(const Input::Event &e)
 
 #endif
 
-#ifdef CONFIG_BASE_IOS_SETUID
-namespace CATS
-{
-	extern char warWasBeginning[];
-}
-#endif
-
 void bluetoothScanHandler(TextMenuItem &, const Input::Event &e)
 {
-	#ifdef CONFIG_BASE_IOS_SETUID
-		if(FsSys::fileExists(CATS::warWasBeginning))
-			return;
-	#endif
-
 	if(Bluetooth::initBT() == OK)
 	{
 		BluetoothAdapter::defaultAdapter()->statusDelegate().bind<&btStatus>();

@@ -167,12 +167,6 @@ extern const char *appPath;
 	static const char *documentsPath() { return appPath; }
 #endif
 
-#if defined (CONFIG_BASE_ANDROID) || defined(CONFIG_BASE_IOS) || defined(CONFIG_ENV_WEBOS)
-	const char *storagePath();
-#else
-	static const char *storagePath() { return appPath; }
-#endif
-
 #if defined(CONFIG_BASE_IOS) && defined(CONFIG_BASE_IOS_JB)
 	#define CONFIG_BASE_USES_SHARED_DOCUMENTS_DIR
 #endif
@@ -211,17 +205,6 @@ static const uint OS_NAV_STYLE_DIM = BIT(0), OS_NAV_STYLE_HIDDEN = BIT(1);
 	void vibrate(uint ms);
 #else
 	static void vibrate(uint ms) { }
-#endif
-
-// UID functions
-#ifdef CONFIG_BASE_IOS_SETUID
-	extern uid_t realUID, effectiveUID;
-	void setUIDReal();
-	bool setUIDEffective();
-#else
-	static int realUID = 0, effectiveUID = 0;
-	static void setUIDReal() { }
-	static bool setUIDEffective() { return 0; }
 #endif
 
 // Device Identification
