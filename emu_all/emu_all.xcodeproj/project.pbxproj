@@ -420,8 +420,7 @@
 		17DB155716E65A9E00B8D346 /* input.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = input.h; sourceTree = "<group>"; };
 		17DB155816E65A9E00B8D346 /* inputDefs.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = inputDefs.hh; sourceTree = "<group>"; };
 		17DB155916E65A9E00B8D346 /* iphone.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = iphone.mm; path = ../../imagine/src/base/iphone/iphone.mm; sourceTree = "<group>"; };
-		17DB155A16E65A9E00B8D346 /* MainApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainApp.h; sourceTree = "<group>"; };
-		17DB155B16E65A9E00B8D346 /* private.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = private.hh; sourceTree = "<group>"; };
+		17DB155A16E65A9E00B8D346 /* iphone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iphone.h; path = ../../imagine/src/base/iphone/iphone.h; sourceTree = "<group>"; };
 		17DB155C16E65A9E00B8D346 /* private.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = private.hh; sourceTree = "<group>"; };
 		17DB157716E65A9E00B8D346 /* BluetoothAdapter.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BluetoothAdapter.hh; sourceTree = "<group>"; };
 		17DB157916E65A9E00B8D346 /* BluetoothInputDevScanner.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BluetoothInputDevScanner.hh; sourceTree = "<group>"; };
@@ -995,6 +994,7 @@
 			isa = PBXGroup;
 			children = (
 				17DB1DAF16ECDD5900B8D346 /* util */,
+				17DB155A16E65A9E00B8D346 /* iphone.h */,
 				17DB155916E65A9E00B8D346 /* iphone.mm */,
 				17DB1DA316ECDCF800B8D346 /* DView.h */,
 				17DB1DA416ECDCF800B8D346 /* DView.m */,
@@ -1208,8 +1208,6 @@
 				17DB155616E65A9E00B8D346 /* ICadeHelper.hh */,
 				17DB155716E65A9E00B8D346 /* input.h */,
 				17DB155816E65A9E00B8D346 /* inputDefs.hh */,
-				17DB155A16E65A9E00B8D346 /* MainApp.h */,
-				17DB155B16E65A9E00B8D346 /* private.hh */,
 			);
 			path = iphone;
 			sourceTree = "<group>";
@@ -2766,6 +2764,7 @@
 		17DB130F16E659A800B8D346 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libstdc++";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/libs/DianJinFramework\"/**",
@@ -2790,6 +2789,7 @@
 					"libs/DianJinFramework/**",
 				);
 				INFOPLIST_FILE = "emu_all/emu_all-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/libs\"",
@@ -2806,6 +2806,7 @@
 		17DB131016E659A800B8D346 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libstdc++";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/libs/DianJinFramework\"/**",
@@ -2828,6 +2829,7 @@
 					"libs/DianJinFramework/**",
 				);
 				INFOPLIST_FILE = "emu_all/emu_all-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/libs\"",

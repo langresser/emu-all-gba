@@ -29,9 +29,9 @@ static Io *openAppAssetIo(const char *name)
 	#ifdef CONFIG_BASE_ANDROID
 	if(!string_printf(path, sizeof(path), "assets/%s", name))
 		return 0;
-	return IoZip::open(Base::appPath, path);
+	return IoZip::open(applicationPath(), path);
 	#else
-	if(!string_printf(path, sizeof(path), "%s/%s", Base::appPath, name))
+	if(!string_printf(path, sizeof(path), "%s/%s", Base::applicationPath(), name))
 		return 0;
 	return IoSys::open(path);
 	#endif

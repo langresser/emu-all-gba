@@ -1,6 +1,6 @@
 #define thisModuleName "base:iphone"
 
-#import "MainApp.h"
+#import "iphone.h"
 #import "EAGLView.h"
 #import <dlfcn.h>
 #import <unistd.h>
@@ -19,7 +19,6 @@
 
 namespace Base
 {
-	static UIWindow *devWindow;
 	static int pointScale = 1;
 	static MainApp *mainApp;
 }
@@ -55,18 +54,10 @@ struct ThreadMsg
 	int intArg2;
 };
 
-const char *appPath = 0;
-static UIWindow *externalWindow = 0;
 static EAGLView *glView;
 static EAGLContext *mainContext;
 static CADisplayLink *displayLink = 0;
 static BOOL displayLinkActive = NO;
-static bool isIPad = 0;
-#ifdef __ARM_ARCH_6K__
-static bool usingiOS4 = 0;
-#else
-static const bool usingiOS4 = 1; // always on iOS 4.3+ when compiled for ARMv7
-#endif
 ;
 #ifdef CONFIG_INPUT_ICADE
 static ICadeHelper iCade = { nil };
@@ -162,24 +153,19 @@ uint appState = APP_RUNNING;
 {
 	CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
 
-	#if !defined(__ARM_ARCH_6K__)
 	using namespace Base;
-	if(usingiOS4)
-	{
-		logMsg("testing for Retina Display");
-		if([UIScreen mainScreen].scale == 2.0)
-		{
-			logMsg("running on Retina Display");
-			eaglLayer.contentsScale = 2.0;
-			pointScale = 2;
-			mainWin.rect.x2 *= 2;
-			mainWin.rect.y2 *= 2;
-			mainWin.w *= 2;
-			mainWin.h *= 2;
-			currWin = mainWin;
-	    }
-	}
-	#endif
+
+    if([UIScreen mainScreen].scale == 2.0)
+    {
+        logMsg("running on Retina Display");
+        eaglLayer.contentsScale = 2.0;
+        pointScale = 2;
+        mainWin.rect.x2 *= 2;
+        mainWin.rect.y2 *= 2;
+        mainWin.w *= 2;
+        mainWin.h *= 2;
+        currWin = mainWin;
+    }
 
 	self.multipleTouchEnabled = YES;
 	eaglLayer.opaque = YES;
@@ -412,40 +398,7 @@ uint appState = APP_RUNNING;
 @end
 
 @implementation MainApp
-
-#if defined(CONFIG_INPUT) && defined(IPHONE_VKEYBOARD)
-- (BOOL)textFieldShouldReturn:(UITextField *)textField
-{
-	logMsg("pushed return");
-	[textField resignFirstResponder];
-	return YES;
-}
-
-- (void)textFieldDidEndEditing:(UITextField *)textField
-{
-	using namespace Input;
-	logMsg("editing ended");
-	//inVKeyboard = 0;
-	if(vKeyboardTextDelegate.hasCallback())
-	{
-		logMsg("running text entry callback");
-		vKeyboardTextDelegate.invoke([textField.text UTF8String]);
-	}
-	vKeyboardTextDelegate.clear();
-	//vkbdField.text = @"";
-	[textField removeFromSuperview];
-	vkbdField = nil;
-}
-
-#endif
-
-- (void)keyboardWasShown:(NSNotification *)notification
-{
-}
-
-- (void) keyboardWillHide:(NSNotification *)notification
-{
-}
+@synthesize window;
 
 static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 {
@@ -468,11 +421,10 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	// based on iPhone/iPod DPI of 163 (326 retina)
 	uint unscaledDPI = 163;
 	#if !defined(__ARM_ARCH_6K__) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= 30200)
-	if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+	if(isPad())
 	{
 		// based on iPad DPI of 132 (264 retina) 
 		unscaledDPI = 132;
-		isIPad = 1;
 		logMsg("running on iPad");
 	}
 	#endif
@@ -484,17 +436,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	Gfx::viewMMHeight_ = roundf((mainWin.h / (float)unscaledDPI) * 25.4);
 	logMsg("set screen MM size %dx%d", Gfx::viewMMWidth_, Gfx::viewMMHeight_);
 	currWin = mainWin;
-	// Create a full-screen window
-	devWindow = [[UIWindow alloc] initWithFrame:rect];
-	
-	#ifdef GREYSTRIPE
-	initGS(self);
-	#endif
-	
-	NSNotificationCenter *nCenter = [NSNotificationCenter defaultCenter];
-	[nCenter addObserver:self selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification object:nil];
-	[nCenter addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
-	[nCenter addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
 	
 	doOrExit(onInit(0, nullptr)); // TODO: args
 	// Create the OpenGL ES view and add it to the Window
@@ -506,26 +447,23 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	Base::setAutoOrientation(1);
 	
-	// view controller init
-	if(usingiOS4)
-	{
-		viewCtrl = [[ImagineUIViewController alloc] init];
-		viewCtrl.view = glView;
-		devWindow.rootViewController = viewCtrl;
-	}
-	else
-	{
-		[devWindow addSubview:glView];
-	}
-
-	[devWindow makeKeyAndVisible];
-	logMsg("exiting applicationDidFinishLaunching");
+    viewCtrl = [[ImagineUIViewController alloc] init];
+    viewCtrl.view = glView;
+    
+    gameListVC = [[GameListViewController alloc]init];
+    gameVC = [[UINavigationController alloc] initWithRootViewController:gameListVC];
+    [gameVC setNavigationBarHidden:YES];
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.rootViewController = gameVC;
+    [self.window makeKeyAndVisible];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];
 	[[DianJinOfferPlatform defaultPlatform] setOfferViewColor:kDJBrownColor];
     [UMFeedback checkWithAppkey:kUMengAppKey];
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onRecNewMsg:) name:UMFBCheckFinishedNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification object:nil];
 }
 
 - (void)orientationChanged:(NSNotification *)notification
@@ -533,7 +471,7 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	uint o = iOSOrientationToGfx([[UIDevice currentDevice] orientation]);
 	if(o == 255)
 		return;
-	if(o == Gfx::VIEW_ROTATE_180 && !Base::isIPad)
+	if(o == Gfx::VIEW_ROTATE_180 && !isPad())
 		return; // ignore upside-down orientation unless using iPad
 	logMsg("new orientation %s", Gfx::orientationName(o));
 	Gfx::preferedOrientation = o;
@@ -542,7 +480,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
-	logMsg("resign active");
 	Base::stopAnimation();
 	glFinish();
 }
@@ -744,10 +681,15 @@ void sendMessageToMain(ThreadPThread &, int type, int shortArg, int intArg, int 
 		waitUntilDone:NO];
 }
 
-static const char *docPath = 0;
 
+const char *applicationPath()
+{
+    return [[[NSBundle mainBundle]bundlePath]UTF8String];
+}
+    
 const char *documentsPath()
 {
+    static const char *docPath = 0;
 	if(!docPath)
 	{
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -759,7 +701,7 @@ const char *documentsPath()
 
 int runningDeviceType()
 {
-	return isIPad ? DEV_TYPE_IPAD : DEV_TYPE_GENERIC;
+	return isPad() ? DEV_TYPE_IPAD : DEV_TYPE_GENERIC;
 }
 }
 

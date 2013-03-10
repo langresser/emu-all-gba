@@ -42,11 +42,7 @@ static const uchar maxCursors =
 #if defined(CONFIG_BASE_X11)
 	4 // unknown max
 #elif defined(CONFIG_BASE_IOS)
-	#if !defined(__ARM_ARCH_6K__)
 		7
-	#else
-		4
-	#endif
 #elif defined(CONFIG_BASE_ANDROID)
 	#if CONFIG_ENV_ANDROID_MINSDK == 4
 		1 // no multi-touch

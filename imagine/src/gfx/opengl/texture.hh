@@ -457,7 +457,6 @@ bool BufferImage::setupTexture(Pixmap &pix, bool upload, uint internalFormat, in
 		#elif !defined(CONFIG_BASE_PS3)
 			glTexParameteri(texTarget, GL_GENERATE_MIPMAP, GL_TRUE);
 		#else
-			// TODO: find PS3 version
 		#endif
 	}
 	{

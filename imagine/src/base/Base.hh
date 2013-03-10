@@ -159,12 +159,8 @@ static CallbackRef *callbackAfterDelaySec(CallbackDelegate callback, int s)
 }
 
 // app file system paths
-extern const char *appPath;
-#if defined (CONFIG_BASE_ANDROID) || defined(CONFIG_BASE_IOS)
-	const char *documentsPath();
-#else
-	static const char *documentsPath() { return appPath; }
-#endif
+    const char *documentsPath();
+    const char* applicationPath();
 
 #if defined(CONFIG_BASE_IOS) && defined(CONFIG_BASE_IOS_JB)
 	#define CONFIG_BASE_USES_SHARED_DOCUMENTS_DIR

@@ -421,11 +421,5 @@ CallResult FsPosix::changeToAppDir(const char *launchCmd)
 		logErr("error changing working directory to %s", path);
 		return INVALID_PARAMETER;
 	}
-	//logMsg("changed working directory to %s", path);
-	if(!Base::appPath)
-	{
-		Base::appPath = string_dup(workDir());
-		logMsg("set app dir to %s", Base::appPath);
-	}
 	return OK;
 }

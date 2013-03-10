@@ -23,8 +23,6 @@
 
 #ifdef CONFIG_BASE_ANDROID
 	#include <android/log.h>
-#elif defined(CONFIG_BASE_IOS)
-	#include <base/iphone/private.hh>
 #endif
 
 static const bool bufferLogLineOutput = Config::envIsAndroid || Config::envIsIOS;
@@ -66,7 +64,6 @@ CallResult logger_init()
 		}
 	}
 
-	//logMsg("init logger");
 	return OK;
 }
 
@@ -110,8 +107,9 @@ void logger_vprintf(LoggerSeverity severity, const char* msg, va_list args)
 			printf("%s\n", logLineBuffer);
 			logLineBuffer[0] = 0;
 		}
-		else
-			Base::nsLog(msg, args);
+		else {
+			vfprintf(stderr, msg, args);
+        }
 	#else
 		vfprintf(stderr, msg, args);
 	#endif

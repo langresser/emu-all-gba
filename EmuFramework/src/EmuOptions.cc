@@ -149,13 +149,7 @@ bool optionFrameSkipIsValid(uint8 val)
 Byte1Option optionFrameSkip
 		(CFGKEY_FRAME_SKIP,
 		#if defined(CONFIG_BASE_IOS)
-			#ifdef __ARM_ARCH_6K__
-				EmuSystem::optionFrameSkipAuto,
-			#else
 				0,
-			#endif
-		#elif defined(CONFIG_BASE_PS3)
-			0,
 		#else
 			EmuSystem::optionFrameSkipAuto,
 		#endif
