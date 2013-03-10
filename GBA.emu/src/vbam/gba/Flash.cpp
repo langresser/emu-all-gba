@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <memory.h>
 #include "GBA.h"
 #include "Globals.h"
@@ -25,14 +26,14 @@ int flashDeviceID = 0x1b;
 int flashManufacturerID = 0x32;
 int flashBank = 0;
 
-static variable_desc flashSaveData[] = {
+static const variable_desc flashSaveData[] = {
   { &flashState, sizeof(int) },
   { &flashReadState, sizeof(int) },
   { &flashSaveMemory[0], 0x10000 },
   { NULL, 0 }
 };
 
-static variable_desc flashSaveData2[] = {
+static const variable_desc flashSaveData2[] = {
   { &flashState, sizeof(int) },
   { &flashReadState, sizeof(int) },
   { &flashSize, sizeof(int) },
@@ -40,7 +41,7 @@ static variable_desc flashSaveData2[] = {
   { NULL, 0 }
 };
 
-static variable_desc flashSaveData3[] = {
+static const variable_desc flashSaveData3[] = {
   { &flashState, sizeof(int) },
   { &flashReadState, sizeof(int) },
   { &flashSize, sizeof(int) },

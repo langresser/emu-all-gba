@@ -16,9 +16,9 @@
 
 gzFile ZEXPORT memgzopen(char *memory, int available, const char *mode);
 int ZEXPORT memgzread(gzFile file, voidp buf, unsigned len);
-int ZEXPORT memgzwrite(gzFile file, const voidp buf, unsigned len);
+int ZEXPORT memgzwrite(gzFile file, voidpc buf, unsigned len);
 int ZEXPORT memgzclose(gzFile file);
 long ZEXPORT memtell(gzFile file);
-z_off_t ZEXPORT memgzseek(gzFile file, z_off_t off, int whence);
+long ZEXPORT memgzseek(gzFile file, long offset, int whence);
 
 #endif // MEMGZIO_H

@@ -9,7 +9,7 @@ class SoundDriver;
 
 struct EmulatedSystem {
   // main emulation function
-  void (*emuMain)(int);
+  void (*emuMain)(bool renderGfx, bool processGfx, bool renderAudio);
   // reset emulator
   void (*emuReset)();
   // clean up memory
@@ -27,15 +27,15 @@ struct EmulatedSystem {
   // write memory state (rewind)
   bool (*emuWriteMemState)(char *, int);
   // write PNG file
-  bool (*emuWritePNG)(const char *);
+  //bool (*emuWritePNG)(const char *);
   // write BMP file
-  bool (*emuWriteBMP)(const char *);
+  //bool (*emuWriteBMP)(const char *);
   // emulator update CPSR (ARM only)
   void (*emuUpdateCPSR)();
   // emulator has debugger
   bool emuHasDebugger;
   // clock ticks to emulate
-  int emuCount;
+  //int emuCount;
 };
 
 extern void log(const char *,...);
@@ -49,7 +49,11 @@ extern bool systemReadJoypads();
 // return information about the given joystick, -1 for default joystick
 extern u32 systemReadJoypad(int);
 extern u32 systemGetClock();
+#ifndef NDEBUG
 extern void systemMessage(int, const char *, ...);
+#else
+#define systemMessage(i, s, ...) ({ })
+#endif
 extern void systemSetTitle(const char *);
 extern SoundDriver * systemSoundInit();
 extern void systemOnWriteDataToSoundBuffer(const u16 * finalWave, int length);
@@ -77,16 +81,24 @@ extern void winlog(const char *,...);
 extern void (*dbgOutput)(const char *s, u32 addr);
 extern void (*dbgSignal)(int sig,int number);
 
-extern u16 systemColorMap16[0x10000];
-extern u32 systemColorMap32[0x10000];
+#define SUPPORT_PIX_16BIT
+union SystemColorMap
+{
+#ifdef SUPPORT_PIX_32BIT
+	u32 map32[0x10000];
+#endif
+#ifdef SUPPORT_PIX_16BIT
+	u16 map16[0x10000];
+#endif
+};
+extern SystemColorMap systemColorMap;
 extern u16 systemGbPalette[24];
 extern int systemRedShift;
 extern int systemGreenShift;
 extern int systemBlueShift;
 extern int systemColorDepth;
 extern int systemDebug;
-extern int systemVerbose;
-extern int systemFrameSkip;
+static const int systemVerbose = 0;
 extern int systemSaveUpdateCounter;
 extern int systemSpeed;
 

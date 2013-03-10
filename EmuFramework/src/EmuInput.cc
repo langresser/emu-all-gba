@@ -165,7 +165,6 @@ bool isMenuDismissKey(const Input::Event &e)
 void updateInputDevices()
 {
 	using namespace Input;
-	assert(devList.size);
 	int i = 0;
 	forEachInDLList(&devList, e)
 	{

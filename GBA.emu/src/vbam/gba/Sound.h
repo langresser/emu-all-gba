@@ -4,6 +4,7 @@
 // Sound emulation setup/options and GBA sound emulation
 
 #include "../System.h"
+#include "GBA.h"
 
 //// Setup/options (these affect GBA and GB sound)
 
@@ -31,19 +32,19 @@ int  soundGetEnable();
 // Pauses/resumes system sound output
 void soundPause();
 void soundResume();
-extern bool soundPaused; // current paused state
+//extern bool soundPaused; // current paused state
 
 // Cleans up sound. Afterwards, soundInit() can be called again.
 void soundShutdown();
 
 //// GBA sound options
 
-long soundGetSampleRate();
-void soundSetSampleRate(long sampleRate);
+uint soundGetSampleRate();
+void soundSetSampleRate(GBASys &gba, uint sampleRate);
 
 // Sound settings
-extern bool soundInterpolation; // 1 if PCM should have low-pass filtering
-extern float soundFiltering;    // 0.0 = none, 1.0 = max
+extern bool &soundInterpolation; // 1 if PCM should have low-pass filtering
+extern float &soundFiltering;    // 0.0 = none, 1.0 = max
 
 
 //// GBA sound emulation
@@ -56,26 +57,26 @@ extern float soundFiltering;    // 0.0 = none, 1.0 = max
 #define FIFOB_H 0xa6
 
 // Resets emulated sound hardware
-void soundReset();
+void soundReset(GBASys &gba);
 
 // Emulates write to sound hardware
-void soundEvent( u32 addr, u8  data );
-void soundEvent( u32 addr, u16 data ); // TODO: error-prone to overload like this
+void soundEvent( GBASys &gba, u32 addr, u8  data );
+void soundEvent( GBASys &gba, u32 addr, u16 data ); // TODO: error-prone to overload like this
 
 // Notifies emulator that a timer has overflowed
-void soundTimerOverflow( int which );
+void soundTimerOverflow(GBASys &gba, ARM7TDMI &cpu, int which );
 
 // Notifies emulator that PCM rate may have changed
 void interp_rate();
 
 // Notifies emulator that SOUND_CLOCK_TICKS clocks have passed
-void psoundTickfn();
-extern int SOUND_CLOCK_TICKS;   // Number of 16.8 MHz clocks between calls to soundTick()
-extern int soundTicks;          // Number of 16.8 MHz clocks until soundTick() will be called
+void psoundTickfn(bool renderAudio);
+extern const int SOUND_CLOCK_TICKS;   // Number of 16.8 MHz clocks between calls to soundTick()
+extern int &soundTicks;          // Number of 16.8 MHz clocks until soundTick() will be called
 
 // Saves/loads emulator state
 void soundSaveGame( gzFile );
-void soundReadGame( gzFile, int version );
+void soundReadGame( GBASys &gba, gzFile, int version );
 
 class Multi_Buffer;
 

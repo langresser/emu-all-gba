@@ -18,7 +18,6 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 unsigned const vol_reg    = 0xFF24;
 unsigned const stereo_reg = 0xFF25;
 unsigned const status_reg = 0xFF26;
-unsigned const wave_ram   = 0xFF30;
 
 int const power_mask = 0x80;
 
@@ -60,7 +59,7 @@ void Gb_Apu::set_output( Blip_Buffer* center, Blip_Buffer* left, Blip_Buffer* ri
 
 void Gb_Apu::synth_volume( int iv )
 {
-	double v = volume_ * 0.60 / osc_count / 15 /*steps*/ / 8 /*master vol range*/ * iv;
+	SysDecimal v = volume_ * 0.60 / osc_count / 15 /*steps*/ / 8 /*master vol range*/ * iv;
 	good_synth.volume( v );
 	med_synth .volume( v );
 }
@@ -77,7 +76,7 @@ void Gb_Apu::apply_volume()
 	synth_volume( max( left, right ) + 1 );
 }
 
-void Gb_Apu::volume( double v )
+void Gb_Apu::volume( SysDecimal v )
 {
 	if ( volume_ != v )
 	{
@@ -116,7 +115,7 @@ void Gb_Apu::reduce_clicks( bool reduce )
 	if ( reduce && wave.mode != mode_agb ) // AGB already eliminates clicks
 		dac_off_amp = -Gb_Osc::dac_bias;
 
-	for ( int i = 0; i < osc_count; i++ )
+	for ( unsigned int i = 0; i < osc_count; i++ )
 		oscs [i]->dac_off_amp = dac_off_amp;
 
 	// AGB always eliminates clicks on wave channel using same method
@@ -130,8 +129,10 @@ void Gb_Apu::reset( mode_t mode, bool agb_wave )
 	if ( agb_wave )
 		mode = mode_agb; // using AGB wave features implies AGB hardware
 	wave.agb_mask = agb_wave ? 0xFF : 0;
+#ifndef VBAM_NO_GB
 	for ( int i = 0; i < osc_count; i++ )
 		oscs [i]->mode = mode;
+#endif
 	reduce_clicks( reduce_clicks_ );
 
 	// Reset state
@@ -157,14 +158,14 @@ void Gb_Apu::reset( mode_t mode, bool agb_wave )
 	}
 }
 
-void Gb_Apu::set_tempo( double t )
+void Gb_Apu::set_tempo( SysDecimal t )
 {
 	frame_period = 4194304 / 512; // 512 Hz
 	if ( t != 1.0 )
 		frame_period = blip_time_t (frame_period / t);
 }
 
-Gb_Apu::Gb_Apu()
+/*Gb_Apu::Gb_Apu()
 {
 	wave.wave_ram = &regs [wave_ram - start_addr];
 
@@ -190,7 +191,7 @@ Gb_Apu::Gb_Apu()
 	set_tempo( 1.0 );
 	volume_ = 1.0;
 	reset();
-}
+}*/
 
 void Gb_Apu::run_until_( blip_time_t end_time )
 {

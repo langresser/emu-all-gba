@@ -9,7 +9,7 @@
  * Adapted from original gzio.c from zlib library by Forgotten
  */
 
-/* @(#) $Id: memgzio.c 1071 2012-01-20 22:03:27Z squall-leonhart $ */
+/* @(#) $Id: memgzio.c 1017 2011-05-24 07:39:29Z squall-leonhart $ */
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -84,6 +84,9 @@ typedef struct mem_stream {
     long     startpos; /* start of compressed data in file (header skipped) */
 } mem_stream;
 
+#ifndef OF
+	#define OF(x) x
+#endif
 
 local gzFile gz_open      OF((char *memory, const int available, const char *mode));
 local int do_flush        OF((gzFile file, int flush));
@@ -558,7 +561,7 @@ int ZEXPORT memgzread (file, buf, len)
 */
 int ZEXPORT memgzwrite (file, buf, len)
     gzFile file;
-    const voidp buf;
+    voidpc buf;
     unsigned len;
 {
     mem_stream *s = (mem_stream*)file;
@@ -698,22 +701,20 @@ long ZEXPORT memtell(file)
     return memTell(s->file);
 }
 
-z_off_t ZEXPORT memgzseek(gzFile file, z_off_t off, int whence)
+long ZEXPORT memgzseek(gzFile file, long off, int whence)
 {
-	char buf[80];
-
-	if(whence != SEEK_CUR) {
-		fputs("FIXME: memgzio does not support seeking\n", stderr);
-		exit(1);
-	}
-
-	// this is inefficient, but the best I can do without actually reading
-	// the above code
-	while(off > 0) {
-		int r = memgzread(file, buf, off > 80 ? 80 : off);
-		if(r <= 0)
-			return -1;
-		off -= r;
-	}
-	return memtell(file);
+    if(whence != SEEK_CUR) {
+	fputs("FIXME: memgzio does not support seeking\n", stderr);
+	exit(1);
+    }
+    // this is inefficient, but the best I can do without actually reading
+    // the above code
+    char buf[80];
+    while(off > 0) {
+	int r = memgzread(file, buf, off > 80 ? 80 : off);
+	if(r <= 0)
+	    return -1;
+	off -= r;
+    }
+    return memtell(file);
 }

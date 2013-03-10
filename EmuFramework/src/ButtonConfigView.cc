@@ -15,7 +15,6 @@
 
 #include <ButtonConfigView.hh>
 #include <inGameActionKeys.hh>
-#include <main/EmuConfig.hh>
 #include <InputManagerView.hh>
 #include <MsgPopup.hh>
 extern ViewStack viewStack;

@@ -25,7 +25,6 @@ void systemMessage(int num, const char *msg, ...)
 	va_start( args, msg );
 	logger_vprintf(LOG_M, msg, args);
 	va_end( args );
-	logger_printf(LOG_M, "\n");
 	#endif
 }
 #endif

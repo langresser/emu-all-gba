@@ -9,43 +9,120 @@
 #include "GBAcpu.h"
 #include "GBALink.h"
 
-extern const u32 objTilesAddress[3];
+static const u32  objTilesAddress [3] = {0x010000, 0x014000, 0x014000};
 
-extern bool stopState;
-extern bool holdState;
+#ifdef VBAM_USE_HOLDTYPE
 extern int holdType;
-extern int cpuNextEvent;
+#endif
 extern bool cpuSramEnabled;
 extern bool cpuFlashEnabled;
 extern bool cpuEEPROMEnabled;
 extern bool cpuEEPROMSensorEnabled;
-extern bool cpuDmaHack;
-extern u32 cpuDmaLast;
-extern bool timer0On;
-extern int timer0Ticks;
-extern int timer0ClockReload;
-extern bool timer1On;
-extern int timer1Ticks;
-extern int timer1ClockReload;
-extern bool timer2On;
-extern int timer2Ticks;
-extern int timer2ClockReload;
-extern bool timer3On;
-extern int timer3Ticks;
-extern int timer3ClockReload;
-extern int cpuTotalTicks;
 
-#define CPUReadByteQuick(addr) \
-  map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
+// Handlers (TODO)
 
-#define CPUReadHalfWordQuick(addr) \
-  READ16LE(((u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
-
-#define CPUReadMemoryQuick(addr) \
-  READ32LE(((u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
-
-static inline u32 CPUReadMemory(u32 address)
+static inline u32 armRotLoad32(u32 value, u32 address, bool rot = 1)
 {
+  if(rot && (address & 3))
+  {
+    int shift = (address & 3) << 3;
+    return (value >> shift) | (value << (32 - shift));
+  }
+  return value;
+}
+
+static inline u32 unreadableRead32(ARM7TDMI &cpu, u32 address)
+{
+	auto &cpuDmaHack = cpu.gba->dma.cpuDmaHack;
+	auto &cpuDmaLast = cpu.gba->dma.cpuDmaLast;
+	bool &armState = cpu.armState;
+	auto &reg = cpu.reg;
+#ifdef GBA_LOGGING
+	if(systemVerbose & VERBOSE_ILLEGAL_READ) {
+		log("Illegal word read: %08x at %08x\n", address, armMode ?
+			armNextPC - 4 : armNextPC - 2);
+	}
+#endif
+
+	if(cpuDmaHack) {
+		return armRotLoad32(cpuDmaLast, address);
+	} else {
+		if(armState) {
+			return armRotLoad32(CPUReadMemoryQuick(cpu, reg[15].I), address);
+		} else {
+			return armRotLoad32(CPUReadHalfWordQuick(cpu, reg[15].I) |
+				CPUReadHalfWordQuick(cpu, reg[15].I) << 16, address);
+		}
+	}
+}
+
+static inline u32 armRotLoad16(u32 value, u32 address, bool rot = 1)
+{
+	if(rot && (address & 1))
+	{
+	   return (value >> 8) | (value << 24);
+	}
+	return value;
+}
+
+static inline u32 unreadableRead16(ARM7TDMI &cpu, u32 address)
+{
+	auto &cpuDmaHack = cpu.gba->dma.cpuDmaHack;
+	auto &cpuDmaLast = cpu.gba->dma.cpuDmaLast;
+	auto &reg = cpu.reg;
+	bool &armState = cpu.armState;
+#ifdef GBA_LOGGING
+	if(systemVerbose & VERBOSE_ILLEGAL_READ) {
+		log("Illegal halfword read: %08x at %08x\n", address, armMode ?
+			armNextPC - 4 : armNextPC - 2);
+	}
+#endif
+	if(cpuDmaHack) {
+		return armRotLoad16(cpuDmaLast & 0xFFFF, address);
+	} else {
+		if(armState) {
+			return armRotLoad16(CPUReadHalfWordQuick(cpu, reg[15].I + (address & 2)), address);
+		} else {
+			return armRotLoad16(CPUReadHalfWordQuick(cpu, reg[15].I), address);
+		}
+	}
+}
+
+
+static inline u32 unreadableRead8(ARM7TDMI &cpu, u32 address)
+{
+	auto &reg = cpu.reg;
+	auto &cpuDmaHack = cpu.gba->dma.cpuDmaHack;
+	auto &cpuDmaLast = cpu.gba->dma.cpuDmaLast;
+	bool &armState = cpu.armState;
+#ifdef GBA_LOGGING
+	if(systemVerbose & VERBOSE_ILLEGAL_READ) {
+		log("Illegal byte read: %08x at %08x\n", address, armMode ?
+			armNextPC - 4 : armNextPC - 2);
+	}
+#endif
+	if(cpuDmaHack) {
+		return cpuDmaLast & 0xFF;
+	} else {
+		if(armState) {
+			return CPUReadByteQuick(cpu, reg[15].I+(address & 3));
+		} else {
+			return CPUReadByteQuick(cpu, reg[15].I+(address & 1));
+		}
+	}
+}
+
+#ifndef USE_MEM_HANDLERS
+template <bool rot>
+static inline u32 CPUReadMemoryBase(ARM7TDMI &cpu, u32 address)
+{
+	bool &armState = cpu.armState;
+	auto &reg = cpu.reg;
+	auto &paletteRAM = cpu.gba->lcd.paletteRAM;
+	auto &vram = cpu.gba->lcd.vram;
+	auto &oam = cpu.gba->lcd.oam;
+	auto &cpuDmaHack = cpu.gba->dma.cpuDmaHack;
+	auto &cpuDmaLast = cpu.gba->dma.cpuDmaLast;
 #ifdef GBA_LOGGING
   if(address & 3) {
     if(systemVerbose & VERBOSE_UNALIGNED_MEMORY) {
@@ -55,7 +132,6 @@ static inline u32 CPUReadMemory(u32 address)
   }
 #endif
 
-  u32 value;
   switch(address >> 24) {
   case 0:
     if(reg[15].I >> 24) {
@@ -67,54 +143,54 @@ static inline u32 CPUReadMemory(u32 address)
         }
 #endif
 
-        value = READ32LE(((u32 *)&biosProtected));
+        return armRotLoad32(READ32LE(((u32 *)&cpu.gba->biosProtected)), address, rot);
       }
       else goto unreadable;
     } else
-      value = READ32LE(((u32 *)&bios[address & 0x3FFC]));
+    	return armRotLoad32(READ32LE(((u32 *)&cpu.gba->mem.bios[address & 0x3FFC])), address, rot);
     break;
   case 2:
-    value = READ32LE(((u32 *)&workRAM[address & 0x3FFFC]));
+  	return armRotLoad32(READ32LE(((u32 *)&cpu.gba->mem.workRAM[address & 0x3FFFC])), address, rot);
     break;
   case 3:
-    value = READ32LE(((u32 *)&internalRAM[address & 0x7ffC]));
+  	return armRotLoad32(READ32LE(((u32 *)&cpu.gba->mem.internalRAM[address & 0x7ffC])), address, rot);
     break;
   case 4:
 	  if((address < 0x4000400) && ioReadable[address & 0x3fc]) {
 		  if(ioReadable[(address & 0x3fc) + 2]) {
-			  value = READ32LE(((u32 *)&ioMem[address & 0x3fC]));
 			  if ((address & 0x3fc) == COMM_JOY_RECV_L)
-				  UPDATE_REG(COMM_JOYSTAT, READ16LE(&ioMem[COMM_JOYSTAT]) & ~JOYSTAT_RECV);
+				  UPDATE_REG(cpu.gba, COMM_JOYSTAT, READ16LE(&cpu.gba->mem.ioMem.b[COMM_JOYSTAT]) & ~JOYSTAT_RECV);
+			  return armRotLoad32(READ32LE(((u32 *)&cpu.gba->mem.ioMem.b[address & 0x3fC])), address, rot);
 		  } else {
-			  value = READ16LE(((u16 *)&ioMem[address & 0x3fc]));
+		  	return armRotLoad32(READ16LE(((u16 *)&cpu.gba->mem.ioMem.b[address & 0x3fc])), address, rot);
 		  }
 	  }
 	  else
 		  goto unreadable;
 	  break;
   case 5:
-    value = READ32LE(((u32 *)&paletteRAM[address & 0x3fC]));
+  	return armRotLoad32(READ32LE(((u32 *)&paletteRAM[address & 0x3fC])), address, rot);
     break;
   case 6:
     address = (address & 0x1fffc);
-    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    if (((cpu.gba->mem.ioMem.DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
     {
-      value = 0;
+    	return 0;
       break;
     }
     if ((address & 0x18000) == 0x18000)
       address &= 0x17fff;
-    value = READ32LE(((u32 *)&vram[address]));
+    return armRotLoad32(READ32LE(((u32 *)&cpu.gba->lcd.vram[address])), address, rot);
     break;
   case 7:
-    value = READ32LE(((u32 *)&oam[address & 0x3FC]));
+  	return armRotLoad32(READ32LE(((u32 *)&cpu.gba->lcd.oam[address & 0x3FC])), address, rot);
     break;
   case 8:
   case 9:
   case 10:
   case 11:
   case 12:
-    value = READ32LE(((u32 *)&rom[address&0x1FFFFFC]));
+  	return armRotLoad32(READ32LE(((u32 *)&cpu.gba->mem.rom[address&0x1FFFFFC])), address, rot);
     break;
   case 13:
     if(cpuEEPROMEnabled)
@@ -136,18 +212,18 @@ unreadable:
 #endif
 
     if(cpuDmaHack) {
-      value = cpuDmaLast;
+    	return armRotLoad32(cpuDmaLast, address, rot);
     } else {
       if(armState) {
-        value = CPUReadMemoryQuick(reg[15].I);
+      	return armRotLoad32(CPUReadMemoryQuick(cpu, reg[15].I), address, rot);
       } else {
-        value = CPUReadHalfWordQuick(reg[15].I) |
-          CPUReadHalfWordQuick(reg[15].I) << 16;
+      	return armRotLoad32(CPUReadHalfWordQuick(cpu, reg[15].I) |
+          CPUReadHalfWordQuick(cpu, reg[15].I) << 16, address, rot);
       }
     }
   }
 
-  if(address & 3) {
+  /*if(address & 3) {
 #ifdef C_CORE
     int shift = (address & 3) << 3;
     value = (value >> shift) | (value << (32 - shift));
@@ -168,13 +244,54 @@ unreadable:
 #endif
 #endif
   }
-  return value;
+  return value;*/
 }
 
-extern u32 myROM[];
-
-static inline u32 CPUReadHalfWord(u32 address)
+static inline u32 CPUReadMemory(ARM7TDMI &cpu, u32 address)
 {
+	return CPUReadMemoryBase<1>(cpu, address);
+}
+
+static inline u32 CPUReadMemoryNoRot(ARM7TDMI &cpu, u32 address)
+{
+	return CPUReadMemoryBase<1>(cpu, address);
+}
+
+
+
+
+template <bool rot>
+static inline u32 CPUReadHalfWordBase(ARM7TDMI &cpu, u32 address)
+{
+	auto &armState = cpu.armState;
+	auto &cpuNextEvent = cpu.cpuNextEvent;
+	auto &cpuTotalTicks = cpu.cpuTotalTicks;
+	auto &reg = cpu.reg;
+	auto &paletteRAM = cpu.gba->lcd.paletteRAM;
+	auto &vram = cpu.gba->lcd.vram;
+	auto &oam = cpu.gba->lcd.oam;
+	auto &timer0Value = cpu.gba->timers.timer0Value;
+	auto &timer0On = cpu.gba->timers.timer0On;
+	auto &timer0Ticks = cpu.gba->timers.timer0Ticks;
+	auto &timer0Reload = cpu.gba->timers.timer0Reload;
+	auto &timer0ClockReload  = cpu.gba->timers.timer0ClockReload;
+	auto &timer1Value = cpu.gba->timers.timer1Value;
+	auto &timer1On = cpu.gba->timers.timer1On;
+	auto &timer1Ticks = cpu.gba->timers.timer1Ticks;
+	auto &timer1Reload = cpu.gba->timers.timer1Reload;
+	auto &timer1ClockReload  = cpu.gba->timers.timer1ClockReload;
+	auto &timer2Value = cpu.gba->timers.timer2Value;
+	auto &timer2On = cpu.gba->timers.timer2On;
+	auto &timer2Ticks = cpu.gba->timers.timer2Ticks;
+	auto &timer2Reload = cpu.gba->timers.timer2Reload;
+	auto &timer2ClockReload  = cpu.gba->timers.timer2ClockReload;
+	auto &timer3Value = cpu.gba->timers.timer3Value;
+	auto &timer3On = cpu.gba->timers.timer3On;
+	auto &timer3Ticks = cpu.gba->timers.timer3Ticks;
+	auto &timer3Reload = cpu.gba->timers.timer3Reload;
+	auto &timer3ClockReload  = cpu.gba->timers.timer3ClockReload;
+	auto &cpuDmaHack = cpu.gba->dma.cpuDmaHack;
+	auto &cpuDmaLast = cpu.gba->dma.cpuDmaLast;
 #ifdef GBA_LOGGING
   if(address & 1) {
     if(systemVerbose & VERBOSE_UNALIGNED_MEMORY) {
@@ -183,8 +300,6 @@ static inline u32 CPUReadHalfWord(u32 address)
     }
   }
 #endif
-
-  u32 value;
 
   switch(address >> 24) {
   case 0:
@@ -196,64 +311,63 @@ static inline u32 CPUReadHalfWord(u32 address)
             armNextPC - 4 : armNextPC - 2);
         }
 #endif
-        value = READ16LE(((u16 *)&biosProtected[address&2]));
+        return armRotLoad16(READ16LE(((u16 *)&cpu.gba->biosProtected[address&2])), address, rot);
       } else goto unreadable;
     } else
-      value = READ16LE(((u16 *)&bios[address & 0x3FFE]));
+    	return armRotLoad16(READ16LE(((u16 *)&cpu.gba->mem.bios[address & 0x3FFE])), address, rot);
     break;
   case 2:
-    value = READ16LE(((u16 *)&workRAM[address & 0x3FFFE]));
+  	return armRotLoad16(READ16LE(((u16 *)&cpu.gba->mem.workRAM[address & 0x3FFFE])), address, rot);
     break;
   case 3:
-    value = READ16LE(((u16 *)&internalRAM[address & 0x7ffe]));
+  	return armRotLoad16(READ16LE(((u16 *)&cpu.gba->mem.internalRAM[address & 0x7ffe])), address, rot);
     break;
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fe])
     {
-      value =  READ16LE(((u16 *)&ioMem[address & 0x3fe]));
       if (((address & 0x3fe)>0xFF) && ((address & 0x3fe)<0x10E))
       {
         if (((address & 0x3fe) == 0x100) && timer0On)
-          value = 0xFFFF - ((timer0Ticks-cpuTotalTicks) >> timer0ClockReload);
+        	return armRotLoad16(0xFFFF - ((timer0Ticks-cpuTotalTicks) >> timer0ClockReload), address, rot);
         else
-          if (((address & 0x3fe) == 0x104) && timer1On && !(TM1CNT & 4))
-            value = 0xFFFF - ((timer1Ticks-cpuTotalTicks) >> timer1ClockReload);
+          if (((address & 0x3fe) == 0x104) && timer1On && !(cpu.gba->mem.ioMem.TM1CNT & 4))
+          	return armRotLoad16(0xFFFF - ((timer1Ticks-cpuTotalTicks) >> timer1ClockReload), address, rot);
           else
-            if (((address & 0x3fe) == 0x108) && timer2On && !(TM2CNT & 4))
-              value = 0xFFFF - ((timer2Ticks-cpuTotalTicks) >> timer2ClockReload);
+            if (((address & 0x3fe) == 0x108) && timer2On && !(cpu.gba->mem.ioMem.TM2CNT & 4))
+            	return armRotLoad16(0xFFFF - ((timer2Ticks-cpuTotalTicks) >> timer2ClockReload), address, rot);
             else
-              if (((address & 0x3fe) == 0x10C) && timer3On && !(TM3CNT & 4))
-                value = 0xFFFF - ((timer3Ticks-cpuTotalTicks) >> timer3ClockReload);
+              if (((address & 0x3fe) == 0x10C) && timer3On && !(cpu.gba->mem.ioMem.TM3CNT & 4))
+              	return armRotLoad16(0xFFFF - ((timer3Ticks-cpuTotalTicks) >> timer3ClockReload), address, rot);
       }
+      return armRotLoad16(READ16LE(((u16 *)&cpu.gba->mem.ioMem.b[address & 0x3fe])), address, rot);
     }
     else goto unreadable;
     break;
   case 5:
-    value = READ16LE(((u16 *)&paletteRAM[address & 0x3fe]));
+  	return armRotLoad16(READ16LE(((u16 *)&paletteRAM[address & 0x3fe])), address, rot);
     break;
   case 6:
     address = (address & 0x1fffe);
-    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    if (((cpu.gba->mem.ioMem.DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
     {
-      value = 0;
+    	return 0;
       break;
     }
     if ((address & 0x18000) == 0x18000)
       address &= 0x17fff;
-    value = READ16LE(((u16 *)&vram[address]));
+    return armRotLoad16(READ16LE(((u16 *)&cpu.gba->lcd.vram[address])), address, rot);
     break;
   case 7:
-    value = READ16LE(((u16 *)&oam[address & 0x3fe]));
+  	return armRotLoad16(READ16LE(((u16 *)&cpu.gba->lcd.oam[address & 0x3fe])), address, rot);
     break;
   case 8:
-  case 9:
-  case 10:
-  case 11:
-  case 12:
+  	/*if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8)
+  	  return armRotLoad16(rtcRead(address), address, rot);*/
+  case 9 ... 12:
     if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8)
-      value = rtcRead(address);
+    	return armRotLoad16(rtcRead(*cpu.gba, address), address, rot);
     else
-      value = READ16LE(((u16 *)&rom[address & 0x1FFFFFE]));
+    	return armRotLoad16(READ16LE(((u16 *)&cpu.gba->mem.rom[address & 0x1FFFFFE])), address, rot);
     break;
   case 13:
     if(cpuEEPROMEnabled)
@@ -274,34 +388,51 @@ unreadable:
     }
 #endif
     if(cpuDmaHack) {
-      value = cpuDmaLast & 0xFFFF;
+    	return armRotLoad16(cpuDmaLast & 0xFFFF, address, rot);
     } else {
       if(armState) {
-        value = CPUReadHalfWordQuick(reg[15].I + (address & 2));
+      	return armRotLoad16(CPUReadHalfWordQuick(cpu, reg[15].I + (address & 2)), address, rot);
       } else {
-        value = CPUReadHalfWordQuick(reg[15].I);
+      	return armRotLoad16(CPUReadHalfWordQuick(cpu, reg[15].I), address, rot);
       }
     }
     break;
   }
 
-  if(address & 1) {
+  /*if(address & 1) {
     value = (value >> 8) | (value << 24);
   }
 
-  return value;
+  return value;*/
 }
 
-static inline u16 CPUReadHalfWordSigned(u32 address)
+static inline u32 CPUReadHalfWord(ARM7TDMI &cpu, u32 address)
 {
-  u16 value = CPUReadHalfWord(address);
+	return CPUReadHalfWordBase<1>(cpu, address);
+}
+
+static inline u32 CPUReadHalfWordNoRot(ARM7TDMI &cpu, u32 address)
+{
+	return CPUReadHalfWordBase<1>(cpu, address);
+}
+
+static inline u16 CPUReadHalfWordSigned(ARM7TDMI &cpu, u32 address)
+{
+  u16 value = CPUReadHalfWord(cpu, address);
   if((address & 1))
     value = (s8)value;
   return value;
 }
 
-static inline u8 CPUReadByte(u32 address)
+static inline u8 CPUReadByte(ARM7TDMI &cpu, u32 address)
 {
+	auto &armState = cpu.armState;
+	auto &reg = cpu.reg;
+	auto &paletteRAM = cpu.gba->lcd.paletteRAM;
+	auto &vram = cpu.gba->lcd.vram;
+	auto &oam = cpu.gba->lcd.oam;
+	auto &cpuDmaHack = cpu.gba->dma.cpuDmaHack;
+	auto &cpuDmaLast = cpu.gba->dma.cpuDmaLast;
   switch(address >> 24) {
   case 0:
     if (reg[15].I >> 24) {
@@ -312,27 +443,27 @@ static inline u8 CPUReadByte(u32 address)
             armNextPC - 4 : armNextPC - 2);
         }
 #endif
-        return biosProtected[address & 3];
+        return cpu.gba->biosProtected[address & 3];
       } else goto unreadable;
     }
-    return bios[address & 0x3FFF];
+    return cpu.gba->mem.bios[address & 0x3FFF];
   case 2:
-    return workRAM[address & 0x3FFFF];
+    return cpu.gba->mem.workRAM[address & 0x3FFFF];
   case 3:
-    return internalRAM[address & 0x7fff];
+    return cpu.gba->mem.internalRAM[address & 0x7fff];
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3ff])
-      return ioMem[address & 0x3ff];
+      return cpu.gba->mem.ioMem.b[address & 0x3ff];
     else goto unreadable;
   case 5:
     return paletteRAM[address & 0x3ff];
   case 6:
     address = (address & 0x1ffff);
-    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    if (((cpu.gba->mem.ioMem.DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
       return 0;
     if ((address & 0x18000) == 0x18000)
       address &= 0x17fff;
-    return vram[address];
+    return cpu.gba->lcd.vram[address];
   case 7:
     return oam[address & 0x3ff];
   case 8:
@@ -340,7 +471,7 @@ static inline u8 CPUReadByte(u32 address)
   case 10:
   case 11:
   case 12:
-    return rom[address & 0x1FFFFFF];
+    return cpu.gba->mem.rom[address & 0x1FFFFFF];
   case 13:
     if(cpuEEPROMEnabled)
       return eepromRead(address);
@@ -373,17 +504,81 @@ unreadable:
       return cpuDmaLast & 0xFF;
     } else {
       if(armState) {
-        return CPUReadByteQuick(reg[15].I+(address & 3));
+        return CPUReadByteQuick(cpu, reg[15].I+(address & 3));
       } else {
-        return CPUReadByteQuick(reg[15].I+(address & 1));
+        return CPUReadByteQuick(cpu, reg[15].I+(address & 1));
       }
     }
     break;
   }
 }
 
-static inline void CPUWriteMemory(u32 address, u32 value)
+#else
+
+template <bool rot>
+static inline u32 CPUReadMemoryBase(ARM7TDMI &cpu, u32 address)
 {
+	u32 idx = address>>24;
+	if(cpu.map[idx].read32)
+		return cpu.map[idx].read32(cpu, address);
+	else
+		return armRotLoad32(READ32LE(((u32*)&cpu.map[idx].address[address & cpu.map[idx].mask])), address, rot);
+}
+
+static inline u32 CPUReadMemory(ARM7TDMI &cpu, u32 address)
+{
+	return CPUReadMemoryBase<1>(cpu, address);
+}
+
+static inline u32 CPUReadMemoryNoRot(ARM7TDMI &cpu, u32 address)
+{
+	return CPUReadMemoryBase<1>(cpu, address);
+}
+
+template <bool rot>
+static inline u32 CPUReadHalfWordBase(ARM7TDMI &cpu, u32 address)
+{
+	u32 idx = address>>24;
+	if(cpu.map[idx].read16)
+		return cpu.map[idx].read16(cpu, address);
+	else
+		return armRotLoad16(READ16LE(((u16*)&cpu.map[idx].address[address & cpu.map[idx].mask])), address, rot);
+}
+
+static inline u32 CPUReadHalfWord(ARM7TDMI &cpu, u32 address)
+{
+	return CPUReadHalfWordBase<1>(cpu, address);
+}
+
+static inline u32 CPUReadHalfWordNoRot(ARM7TDMI &cpu, u32 address)
+{
+	return CPUReadHalfWordBase<1>(cpu, address);
+}
+
+static inline u16 CPUReadHalfWordSigned(ARM7TDMI &cpu, u32 address)
+{
+  u16 value = CPUReadHalfWord(cpu, address);
+  if((address & 1))
+    value = (s8)value;
+  return value;
+}
+
+static inline u8 CPUReadByte(ARM7TDMI &cpu, u32 address)
+{
+	u32 idx = address>>24;
+	if(cpu.map[idx].read8)
+		return cpu.map[idx].read8(cpu, address);
+	else
+		return cpu.map[idx].address[address & cpu.map[idx].mask];
+}
+
+#endif
+
+static inline void CPUWriteMemory(ARM7TDMI &cpu, u32 address, u32 value)
+{
+	auto &paletteRAM = cpu.gba->lcd.paletteRAM;
+	auto &vram = cpu.gba->lcd.vram;
+	auto &oam = cpu.gba->lcd.oam;
 
 #ifdef GBA_LOGGING
   if(address & 3) {
@@ -404,7 +599,7 @@ static inline void CPUWriteMemory(u32 address, u32 value)
       value);
     else
 #endif
-      WRITE32LE(((u32 *)&workRAM[address & 0x3FFFC]), value);
+      WRITE32LE(((u32 *)&cpu.gba->mem.workRAM[address & 0x3FFFC]), value);
     break;
   case 0x03:
 #ifdef BKPT_SUPPORT
@@ -413,12 +608,12 @@ static inline void CPUWriteMemory(u32 address, u32 value)
       value);
     else
 #endif
-      WRITE32LE(((u32 *)&internalRAM[address & 0x7ffC]), value);
+      WRITE32LE(((u32 *)&cpu.gba->mem.internalRAM[address & 0x7ffC]), value);
     break;
   case 0x04:
     if(address < 0x4000400) {
-      CPUUpdateRegister((address & 0x3FC), value & 0xFFFF);
-      CPUUpdateRegister((address & 0x3FC) + 2, (value >> 16));
+      CPUUpdateRegister(cpu, (address & 0x3FC), value & 0xFFFF);
+      CPUUpdateRegister(cpu, (address & 0x3FC) + 2, (value >> 16));
     } else goto unwritable;
     break;
   case 0x05:
@@ -432,7 +627,7 @@ static inline void CPUWriteMemory(u32 address, u32 value)
     break;
   case 0x06:
     address = (address & 0x1fffc);
-    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    if (((cpu.gba->mem.ioMem.DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
       return;
     if ((address & 0x18000) == 0x18000)
       address &= 0x17fff;
@@ -453,10 +648,11 @@ static inline void CPUWriteMemory(u32 address, u32 value)
     else
 #endif
       WRITE32LE(((u32 *)&oam[address & 0x3fc]), value);
+      //oamUpdated = 1;
     break;
   case 0x0D:
     if(cpuEEPROMEnabled) {
-      eepromWrite(address, value);
+      eepromWrite(address, value, cpu.gba->dma.cpuDmaCount);
       break;
     }
     goto unwritable;
@@ -480,8 +676,11 @@ unwritable:
   }
 }
 
-static inline void CPUWriteHalfWord(u32 address, u16 value)
+static inline void CPUWriteHalfWord(ARM7TDMI &cpu, u32 address, u16 value)
 {
+	auto &paletteRAM = cpu.gba->lcd.paletteRAM;
+	auto &vram = cpu.gba->lcd.vram;
+	auto &oam = cpu.gba->lcd.oam;
 #ifdef GBA_LOGGING
   if(address & 1) {
     if(systemVerbose & VERBOSE_UNALIGNED_MEMORY) {
@@ -501,7 +700,7 @@ static inline void CPUWriteHalfWord(u32 address, u16 value)
       value);
     else
 #endif
-      WRITE16LE(((u16 *)&workRAM[address & 0x3FFFE]),value);
+      WRITE16LE(((u16 *)&cpu.gba->mem.workRAM[address & 0x3FFFE]),value);
     break;
   case 3:
 #ifdef BKPT_SUPPORT
@@ -510,11 +709,11 @@ static inline void CPUWriteHalfWord(u32 address, u16 value)
       value);
     else
 #endif
-      WRITE16LE(((u16 *)&internalRAM[address & 0x7ffe]), value);
+      WRITE16LE(((u16 *)&cpu.gba->mem.internalRAM[address & 0x7ffe]), value);
     break;
   case 4:
     if(address < 0x4000400)
-      CPUUpdateRegister(address & 0x3fe, value);
+      CPUUpdateRegister(cpu, address & 0x3fe, value);
     else goto unwritable;
     break;
   case 5:
@@ -528,7 +727,7 @@ static inline void CPUWriteHalfWord(u32 address, u16 value)
     break;
   case 6:
     address = (address & 0x1fffe);
-    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    if (((cpu.gba->mem.ioMem.DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
       return;
     if ((address & 0x18000) == 0x18000)
       address &= 0x17fff;
@@ -548,17 +747,22 @@ static inline void CPUWriteHalfWord(u32 address, u16 value)
     else
 #endif
       WRITE16LE(((u16 *)&oam[address & 0x3fe]), value);
+      //oamUpdated = 1;
     break;
   case 8:
   case 9:
     if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8) {
       if(!rtcWrite(address, value))
         goto unwritable;
-    } else if(!agbPrintWrite(address, value)) goto unwritable;
+    }
+		#ifdef VBAM_USE_AGB_PRINT
+    else if(!agbPrintWrite(address, value))
+		#endif
+    	goto unwritable;
     break;
   case 13:
     if(cpuEEPROMEnabled) {
-      eepromWrite(address, (u8)value);
+      eepromWrite(address, (u8)value, cpu.gba->dma.cpuDmaCount);
       break;
     }
     goto unwritable;
@@ -582,8 +786,14 @@ unwritable:
   }
 }
 
-static inline void CPUWriteByte(u32 address, u8 b)
+static inline void CPUWriteByte(ARM7TDMI &cpu, u32 address, u8 b)
 {
+	auto &cpuNextEvent = cpu.cpuNextEvent;
+	auto &cpuTotalTicks = cpu.cpuTotalTicks;
+	auto &holdState = cpu.holdState;
+	auto &paletteRAM = cpu.gba->lcd.paletteRAM;
+	auto &vram = cpu.gba->lcd.vram;
+	auto &oam = cpu.gba->lcd.oam;
   switch(address >> 24) {
   case 2:
 #ifdef BKPT_SUPPORT
@@ -591,7 +801,7 @@ static inline void CPUWriteByte(u32 address, u8 b)
       cheatsWriteByte(address & 0x203FFFF, b);
     else
 #endif
-      workRAM[address & 0x3FFFF] = b;
+    	cpu.gba->mem.workRAM[address & 0x3FFFF] = b;
     break;
   case 3:
 #ifdef BKPT_SUPPORT
@@ -599,7 +809,7 @@ static inline void CPUWriteByte(u32 address, u8 b)
       cheatsWriteByte(address & 0x3007fff, b);
     else
 #endif
-      internalRAM[address & 0x7fff] = b;
+    	cpu.gba->mem.internalRAM[address & 0x7fff] = b;
     break;
   case 4:
     if(address < 0x4000400) {
@@ -644,21 +854,23 @@ static inline void CPUWriteByte(u32 address, u8 b)
       case 0x9d:
       case 0x9e:
       case 0x9f:
-        soundEvent(address&0xFF, b);
+        soundEvent(*cpu.gba, address&0xFF, b);
         break;
       case 0x301: // HALTCNT, undocumented
         if(b == 0x80)
-          stopState = true;
+          cpu.gba->stopState = true;
         holdState = 1;
+				#ifdef VBAM_USE_HOLDTYPE
         holdType = -1;
+				#endif
         cpuNextEvent = cpuTotalTicks;
         break;
       default: // every other register
         u32 lowerBits = address & 0x3fe;
         if(address & 1) {
-          CPUUpdateRegister(lowerBits, (READ16LE(&ioMem[lowerBits]) & 0x00FF) | (b << 8));
+          CPUUpdateRegister(cpu, lowerBits, (READ16LE(&cpu.gba->mem.ioMem.b[lowerBits]) & 0x00FF) | (b << 8));
         } else {
-          CPUUpdateRegister(lowerBits, (READ16LE(&ioMem[lowerBits]) & 0xFF00) | b);
+          CPUUpdateRegister(cpu, lowerBits, (READ16LE(&cpu.gba->mem.ioMem.b[lowerBits]) & 0xFF00) | b);
         }
       }
       break;
@@ -666,25 +878,25 @@ static inline void CPUWriteByte(u32 address, u8 b)
     break;
   case 5:
     // no need to switch
-    *((u16 *)&paletteRAM[address & 0x3FE]) = (b << 8) | b;
+  	*((uint16a *)&cpu.gba->lcd.paletteRAM[address & 0x3FE]) = (b << 8) | b;
     break;
   case 6:
     address = (address & 0x1fffe);
-    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    if (((cpu.gba->mem.ioMem.DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
       return;
     if ((address & 0x18000) == 0x18000)
       address &= 0x17fff;
 
     // no need to switch
     // byte writes to OBJ VRAM are ignored
-    if ((address) < objTilesAddress[((DISPCNT&7)+1)>>2])
+    if ((address) < objTilesAddress[((cpu.gba->mem.ioMem.DISPCNT&7)+1)>>2])
     {
 #ifdef BKPT_SUPPORT
       if(freezeVRAM[address])
         cheatsWriteByte(address + 0x06000000, b);
       else
 #endif
-        *((u16 *)&vram[address]) = (b << 8) | b;
+      	*((uint16a *)&vram[address]) = (b << 8) | b;
     }
     break;
   case 7:
@@ -694,7 +906,7 @@ static inline void CPUWriteByte(u32 address, u8 b)
     break;
   case 13:
     if(cpuEEPROMEnabled) {
-      eepromWrite(address, b);
+      eepromWrite(address, b, cpu.gba->dma.cpuDmaCount);
       break;
     }
     goto unwritable;

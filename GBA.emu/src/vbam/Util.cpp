@@ -27,6 +27,8 @@ extern "C" {
 #include "gba/gbafilter.h"
 #include "gb/gbGlobals.h"
 
+#include <util/ansiTypes.h>
+
 #ifndef _MSC_VER
 #define _stricmp strcasecmp
 #endif // ! _MSC_VER
@@ -36,10 +38,7 @@ extern int systemRedShift;
 extern int systemGreenShift;
 extern int systemBlueShift;
 
-extern u16 systemColorMap16[0x10000];
-extern u32 systemColorMap32[0x10000];
-
-static int (ZEXPORT *utilGzWriteFunc)(gzFile, const voidp, unsigned int) = NULL;
+static int (ZEXPORT *utilGzWriteFunc)(gzFile, voidpc, unsigned) = NULL;
 static int (ZEXPORT *utilGzReadFunc)(gzFile, voidp, unsigned int) = NULL;
 static int (ZEXPORT *utilGzCloseFunc)(gzFile) = NULL;
 static z_off_t (ZEXPORT *utilGzSeekFunc)(gzFile, z_off_t, int) = NULL;
@@ -190,131 +189,6 @@ void utilPutWord(u8 *p, u16 value)
   *p = (value >> 8) & 255;
 }
 
-bool utilWriteBMPFile(const char *fileName, int w, int h, u8 *pix)
-{
-  u8 writeBuffer[512 * 3];
-
-  FILE *fp = fopen(fileName,"wb");
-
-  if(!fp) {
-    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), fileName);
-    return false;
-  }
-
-  struct {
-    u8 ident[2];
-    u8 filesize[4];
-    u8 reserved[4];
-    u8 dataoffset[4];
-    u8 headersize[4];
-    u8 width[4];
-    u8 height[4];
-    u8 planes[2];
-    u8 bitsperpixel[2];
-    u8 compression[4];
-    u8 datasize[4];
-    u8 hres[4];
-    u8 vres[4];
-    u8 colors[4];
-    u8 importantcolors[4];
-    //    u8 pad[2];
-  } bmpheader;
-  memset(&bmpheader, 0, sizeof(bmpheader));
-
-  bmpheader.ident[0] = 'B';
-  bmpheader.ident[1] = 'M';
-
-  u32 fsz = sizeof(bmpheader) + w*h*3;
-  utilPutDword(bmpheader.filesize, fsz);
-  utilPutDword(bmpheader.dataoffset, 0x36);
-  utilPutDword(bmpheader.headersize, 0x28);
-  utilPutDword(bmpheader.width, w);
-  utilPutDword(bmpheader.height, h);
-  utilPutDword(bmpheader.planes, 1);
-  utilPutDword(bmpheader.bitsperpixel, 24);
-  utilPutDword(bmpheader.datasize, 3*w*h);
-
-  fwrite(&bmpheader, 1, sizeof(bmpheader), fp);
-
-  u8 *b = writeBuffer;
-
-  int sizeX = w;
-  int sizeY = h;
-
-  switch(systemColorDepth) {
-  case 16:
-    {
-      u16 *p = (u16 *)(pix+(w+2)*(h)*2); // skip first black line
-      for(int y = 0; y < sizeY; y++) {
-        for(int x = 0; x < sizeX; x++) {
-          u16 v = *p++;
-
-          *b++ = ((v >> systemBlueShift) & 0x01f) << 3; // B
-          *b++ = ((v >> systemGreenShift) & 0x001f) << 3; // G
-          *b++ = ((v >> systemRedShift) & 0x001f) << 3; // R
-        }
-        p++; // skip black pixel for filters
-        p++; // skip black pixel for filters
-        p -= 2*(w+2);
-        fwrite(writeBuffer, 1, 3*w, fp);
-
-        b = writeBuffer;
-      }
-    }
-    break;
-  case 24:
-    {
-      u8 *pixU8 = (u8 *)pix+3*w*(h-1);
-      for(int y = 0; y < sizeY; y++) {
-        for(int x = 0; x < sizeX; x++) {
-          if(systemRedShift > systemBlueShift) {
-            *b++ = *pixU8++; // B
-            *b++ = *pixU8++; // G
-            *b++ = *pixU8++; // R
-          } else {
-            int red = *pixU8++;
-            int green = *pixU8++;
-            int blue = *pixU8++;
-
-            *b++ = blue;
-            *b++ = green;
-            *b++ = red;
-          }
-        }
-        pixU8 -= 2*3*w;
-        fwrite(writeBuffer, 1, 3*w, fp);
-
-        b = writeBuffer;
-      }
-    }
-    break;
-  case 32:
-    {
-      u32 *pixU32 = (u32 *)(pix+4*(w+1)*(h));
-      for(int y = 0; y < sizeY; y++) {
-        for(int x = 0; x < sizeX; x++) {
-          u32 v = *pixU32++;
-
-          *b++ = ((v >> systemBlueShift) & 0x001f) << 3; // B
-          *b++ = ((v >> systemGreenShift) & 0x001f) << 3; // G
-          *b++ = ((v >> systemRedShift) & 0x001f) << 3; // R
-        }
-        pixU32++;
-        pixU32 -= 2*(w+1);
-
-        fwrite(writeBuffer, 1, 3*w, fp);
-
-        b = writeBuffer;
-      }
-    }
-    break;
-  }
-
-  fclose(fp);
-
-  return true;
-}
-
 extern bool cpuIsMultiBoot;
 
 bool utilIsGBAImage(const char * file)
@@ -436,7 +310,7 @@ static bool utilIsImage(const char *file)
 }
 
 #ifdef WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 IMAGE_TYPE utilFindType(const char *file)
@@ -515,6 +389,7 @@ u8 *utilLoad(const char *file,
 	if(!fe)
 		return NULL;
 #endif
+
 	// Allocate space for image
 	fex_err_t err = fex_stat(fe);
 	int fileSize = fex_size(fe);
@@ -564,7 +439,7 @@ int utilReadInt(gzFile gzFile)
   return i;
 }
 
-void utilReadData(gzFile gzFile, variable_desc* data)
+void utilReadData(gzFile gzFile, const variable_desc* data)
 {
   while(data->address) {
     utilGzRead(gzFile, data->address, data->size);
@@ -572,7 +447,7 @@ void utilReadData(gzFile gzFile, variable_desc* data)
   }
 }
 
-void utilReadDataSkip(gzFile gzFile, variable_desc* data)
+void utilReadDataSkip(gzFile gzFile, const variable_desc* data)
 {
   while(data->address) {
     utilGzSeek(gzFile, data->size, SEEK_CUR);
@@ -580,7 +455,7 @@ void utilReadDataSkip(gzFile gzFile, variable_desc* data)
   }
 }
 
-void utilWriteData(gzFile gzFile, variable_desc *data)
+void utilWriteData(gzFile gzFile, const variable_desc *data)
 {
   while(data->address) {
     utilGzWrite(gzFile, data->address, data->size);
@@ -590,7 +465,7 @@ void utilWriteData(gzFile gzFile, variable_desc *data)
 
 gzFile utilGzOpen(const char *file, const char *mode)
 {
-  utilGzWriteFunc = (int (ZEXPORT *)(gzFile, void * const, unsigned int))gzwrite;
+  utilGzWriteFunc = /*(int (ZEXPORT *)(gzFile, const voidp, unsigned int))*/gzwrite;
   utilGzReadFunc = gzread;
   utilGzCloseFunc = gzclose;
   utilGzSeekFunc = gzseek;
@@ -681,30 +556,44 @@ void utilGBAFindSave(const u8 *data, const int size)
   flashSetSize(flashSize);
 }
 
+uint makeColor(uint mapIdx, uint rShift, uint gShift, uint bShift)
+{
+	return ((mapIdx & 0x1f) << rShift) |
+			(((mapIdx & 0x3e0) >> 5) << gShift) |
+			(((mapIdx & 0x7c00) >> 10) << bShift);
+}
+
+uint makeRGB565Color(uint mapIdx)
+{
+	return makeColor(mapIdx, 11, 6, 0);
+}
+
 void utilUpdateSystemColorMaps(bool lcd)
 {
   switch(systemColorDepth) {
+#ifdef SUPPORT_PIX_16BIT
   case 16:
     {
       for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
+        systemColorMap.map16[i] = makeRGB565Color(i);
       }
-      if (lcd) gbafilter_pal(systemColorMap16, 0x10000);
+      if (lcd) gbafilter_pal(systemColorMap.map16, 0x10000);
     }
     break;
+#endif
+#ifdef SUPPORT_PIX_32BIT
   case 24:
   case 32:
     {
       for(int i = 0; i < 0x10000; i++) {
-        systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
+        systemColorMap.map32[i] = ((i & 0x1f) << systemRedShift) |
           (((i & 0x3e0) >> 5) << systemGreenShift) |
           (((i & 0x7c00) >> 10) << systemBlueShift);
       }
-      if (lcd) gbafilter_pal32(systemColorMap32, 0x10000);
+      if (lcd) gbafilter_pal32(systemColorMap.map32, 0x10000);
     }
     break;
+#endif
   }
 }
 

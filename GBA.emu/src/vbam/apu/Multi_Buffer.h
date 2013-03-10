@@ -11,13 +11,16 @@
 // consisting of left, center, and right buffers.
 class Multi_Buffer {
 public:
-	Multi_Buffer( int samples_per_frame );
+#ifndef __clang_major__
+	constexpr
+#endif
+	Multi_Buffer( int samples_per_frame ) : samples_per_frame_(samples_per_frame) { }
 	virtual ~Multi_Buffer() { }
 
 	// Sets the number of channels available and optionally their types
 	// (type information used by Effects_Buffer)
-	enum { type_index_mask = 0xFF };
-	enum { wave_type = 0x100, noise_type = 0x200, mixed_type = wave_type | noise_type };
+	static const int type_index_mask = 0xFF;
+	static const int wave_type = 0x100, noise_type = 0x200, mixed_type = wave_type | noise_type;
 	virtual blargg_err_t set_channel_count( int, int const* types = 0 );
 	int channel_count() const { return channel_count_; }
 
@@ -65,13 +68,13 @@ private:
 	Multi_Buffer( const Multi_Buffer& );
 	Multi_Buffer& operator = ( const Multi_Buffer& );
 
-	unsigned channels_changed_count_;
-	long sample_rate_;
-	int length_;
-	int channel_count_;
+	unsigned channels_changed_count_ = 1;
+	long sample_rate_ = 0;
+	int length_ = 0;
+	int channel_count_ = 0;
 	int const samples_per_frame_;
-	int const* channel_types_;
-	bool immediate_removal_;
+	int const* channel_types_ = nullptr;
+	bool immediate_removal_ = true;
 };
 
 // Uses a single buffer and outputs mono samples.
@@ -97,6 +100,10 @@ public:
 
 	class Tracked_Blip_Buffer : public Blip_Buffer {
 	public:
+	#ifndef __clang_major__
+		constexpr Tracked_Blip_Buffer() { }
+	#endif
+
 		// Non-zero if buffer still has non-silent samples in it. Requires that you call
 		// set_modified() appropriately.
 		blip_ulong non_silent() const;
@@ -110,20 +117,22 @@ public:
 		long read_samples( blip_sample_t*, long );
 		void remove_silence( long );
 		void remove_samples( long );
-		Tracked_Blip_Buffer();
 		void clear();
 		void end_frame( blip_time_t );
 	private:
-		blip_long last_non_silence;
+		blip_long last_non_silence = 0;
 		void remove_( long );
 	};
 
 	class Stereo_Mixer {
 	public:
-		Tracked_Blip_Buffer* bufs [3];
-		blargg_long samples_read;
+        Stereo_Mixer() {};
+		constexpr Stereo_Mixer(Tracked_Blip_Buffer *cen, Tracked_Blip_Buffer *left, Tracked_Blip_Buffer *right, blargg_long samples_read):
+			bufs{left, right, cen}, samples_read(samples_read) { }
 
-		Stereo_Mixer() : samples_read( 0 ) { }
+		Tracked_Blip_Buffer* bufs [3];
+		blargg_long samples_read = 0;
+
 		void read_pairs( blip_sample_t* out, int count );
 	private:
 		void mix_mono  ( blip_sample_t* out, int pair_count );
@@ -140,7 +149,10 @@ public:
 	Blip_Buffer* right()    { return &bufs [1]; }
 
 public:
-	Stereo_Buffer();
+#ifndef __clang_major__
+	constexpr
+#endif
+	Stereo_Buffer(): Multi_Buffer( 2 ) { }
 	~Stereo_Buffer();
 	blargg_err_t set_sample_rate( long, int msec = blip_default_length );
 	void clock_rate( long );
@@ -153,12 +165,12 @@ public:
 	long read_samples( blip_sample_t*, long );
 
 private:
-	enum { bufs_size = 3 };
+	static const int bufs_size = 3;
 	typedef Tracked_Blip_Buffer buf_t;
 	buf_t bufs [bufs_size];
-	Stereo_Mixer mixer;
-	channel_t chan;
-	long samples_avail_;
+	Stereo_Mixer mixer { &bufs[2], &bufs[0], &bufs[1], 0 };
+	channel_t chan { &bufs[2], &bufs[0], &bufs[1] };
+	long samples_avail_ = 0;
 };
 
 // Silent_Buffer generates no samples, useful where no sound is wanted

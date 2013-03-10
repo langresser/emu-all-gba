@@ -51,7 +51,7 @@ struct Projector
 
 	bool project(GC objx, GC objy, GC objz, GC &winx, GC &winy, GC &winz)
 	{
-		const Vector4d<GC> in = { { { objx, objy, objz, 1.0 } } };
+		const Vector4d<GC> in = { { { objx, objy, objz, static_cast<int>(1.0) } } };
 		Vector4d<GC> out;
 
 		mat.mult(in, out);
@@ -88,7 +88,7 @@ struct Projector
 
 	bool unProject(GC winx, GC winy, GC winz, GC &objx, GC &objy, GC &objz)
 	{
-		Vector4d<GC> in = { { { winx, winy, winz, 1.0 } } };
+		Vector4d<GC> in = { { { winx, winy, winz, static_cast<int>(1.0) } } };
 		Vector4d<GC> out;
 
 		// Map x and y from window coordinates

@@ -172,4 +172,4 @@ static const char *stateNameStr(int slot)
 
 #include <CreditsView.hh>
 #include <inGameActionKeys.hh>
-#include <main/EmuConfig.hh>
+#include "EmuConfig.hh"

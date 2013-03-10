@@ -28,9 +28,9 @@ u8 *utilLoad(const char *, bool (*)(const char*), u8 *, int &);
 
 void utilPutDword(u8 *, u32);
 void utilPutWord(u8 *, u16);
-void utilWriteData(gzFile, variable_desc *);
-void utilReadData(gzFile, variable_desc *);
-void utilReadDataSkip(gzFile, variable_desc *);
+void utilWriteData(gzFile, const variable_desc *);
+void utilReadData(gzFile, const variable_desc *);
+void utilReadDataSkip(gzFile, const variable_desc *);
 int utilReadInt(gzFile);
 void utilWriteInt(gzFile, int);
 gzFile utilGzOpen(const char *file, const char *mode);

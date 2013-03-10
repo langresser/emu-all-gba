@@ -1,33 +1,6 @@
 // This file was written by denopqrihg
 // with major changes by tjm
-#include <string.h>
-#include <stdio.h>
-
-// malloc.h does not seem to exist on Mac OS 10.7
-#ifdef __APPLE__
-#include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
-
-int vbaid = 0;
-const char *MakeInstanceFilename(const char *Input)
-{
-	if (vbaid == 0)
-		return Input;
-
-	static char *result=NULL;
-	if (result!=NULL)
-		free(result);
-
-	result = (char *)malloc(strlen(Input)+3);
-	char *p = strrchr((char *)Input, '.');
-	sprintf(result, "%.*s-%d.%s", (int)(p-Input), Input, vbaid+1, p+1);
-	return result;
-}
-
 #ifndef NO_LINK
-
 // Joybus
 bool gba_joybus_enabled = false;
 
@@ -37,6 +10,8 @@ bool gba_link_enabled = false;
 #define LOCAL_LINK_NAME "VBA link memory"
 #define IP_LINK_PORT 5738
 
+#include <string.h>
+#include <stdio.h>
 #include "../common/Port.h"
 #include "GBA.h"
 #include "GBALink.h"
@@ -48,7 +23,7 @@ bool gba_link_enabled = false;
 #define _(x) x
 #endif
 #define N_(x) x
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 #include <windows.h>
 #else
 #include <sys/mman.h>
@@ -168,20 +143,20 @@ sf::IPAddress joybusHostAddr = sf::IPAddress::LocalHost;
 u8 tspeed = 3;
 u8 transfer = 0;
 LINKDATA *linkmem = NULL;
-int linkid = 0;
-#if (defined __WIN32__ || defined _WIN32)
+int linkid = 0, vbaid = 0;
+#ifdef __WIN32__
 HANDLE linksync[4];
 #else
 sem_t *linksync[4];
 #endif
 int savedlinktime = 0;
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 HANDLE mmf = NULL;
 #else
 int mmf = -1;
 #endif
 char linkevent[] =
-#if !(defined __WIN32__ || defined _WIN32)
+#ifndef __WIN32__
 	"/"
 #endif
 	"VBA link event  ";
@@ -237,6 +212,21 @@ void LinkServerThread(void *);
 int StartServer(void);
 
 u16 StartRFU(u16);
+
+const char *MakeInstanceFilename(const char *Input)
+{
+	if (vbaid == 0)
+		return Input;
+
+	static char *result=NULL;
+	if (result!=NULL)
+		free(result);
+
+	result = (char *)malloc(strlen(Input)+3);
+	char *p = strrchr((char *)Input, '.');
+	sprintf(result, "%.*s-%d.%s", (int)(p-Input), Input, vbaid+1, p+1);
+	return result;
+}
 
 void StartLink(u16 value)
 {
@@ -490,8 +480,10 @@ void LinkUpdate(int ticks)
 			{
 				linkdata[linkid] = READ16LE(&ioMem[COMM_SIODATA8]);
 
-				lc.Send();
+				if (!lc.oncesend)
+					lc.Send();
 
+				lc.oncesend = false;
 				UPDATE_REG(COMM_SIODATA32_L, linkdata[0]);
 				UPDATE_REG(COMM_SIOCNT, READ16LE(&ioMem[COMM_SIOCNT]) | 0x80);
 				transfer = 1;
@@ -971,7 +963,7 @@ bool InitLink()
 {
 	linkid = 0;
 
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 	if((mmf=CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LINKDATA), LOCAL_LINK_NAME))==NULL){
 		systemMessage(0, N_("Error creating file mapping"));
 		return false;
@@ -1026,7 +1018,7 @@ bool InitLink()
 				break;
 			}
 		if(vbaid == 4){
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 			UnmapViewOfFile(linkmem);
 			CloseHandle(mmf);
 #else
@@ -1046,7 +1038,7 @@ bool InitLink()
 
 	for(i=0;i<4;i++){
 		linkevent[sizeof(linkevent)-2]=(char)i+'1';
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 		linksync[i] = firstone ?
 			CreateSemaphore(NULL, 0, 4, linkevent) :
 			OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, linkevent);
@@ -1133,7 +1125,7 @@ void CloseLink(void){
 
 	for(i=0;i<4;i++){
 		if(linksync[i]!=NULL){
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 			ReleaseSemaphore(linksync[i], 1, NULL);
 			CloseHandle(linksync[i]);
 #else
@@ -1145,7 +1137,7 @@ void CloseLink(void){
 #endif
 		}
 	}
-#if (defined __WIN32__ || defined _WIN32)
+#ifdef __WIN32__
 	CloseHandle(mmf);
 	UnmapViewOfFile(linkmem);
 
@@ -1166,7 +1158,7 @@ void CloseLink(void){
 // this may be necessary under MSW as well, but I wouldn't know how
 void CleanLocalLink()
 {
-#if !(defined __WIN32__ || defined _WIN32)
+#ifndef __WIN32__
 	shm_unlink("/" LOCAL_LINK_NAME);
 	for(int i = 0; i < 4; i++) {
 		linkevent[sizeof(linkevent) - 2] = '1' + i;
@@ -1225,7 +1217,7 @@ void LinkServerThread(void *_sid){
 		fdset.Add(lanlink.tcpsocket);
 		if(lanlink.terminate){
 			ReleaseSemaphore(linksync[vbaid], 1, NULL);
-			goto CloseInfoDisplay;
+			return;
 		}
 		if(fdset.Wait(0.1)==1){
 			sf::Socket::Status st =
@@ -1254,8 +1246,6 @@ void LinkServerThread(void *_sid){
 		ls.tcpsocket[i].Send(outbuffer, 4);
 	}
 
-CloseInfoDisplay:
-	delete sid;
 	return;
 }
 
@@ -1309,8 +1299,7 @@ void lserver::Recv(void){
 		fdset.Clear();
 		for(i=0;i<lanlink.numslaves;i++) fdset.Add(tcpsocket[i+1]);
 		// was linktimeout/1000 (i.e., drop ms part), but that's wrong
-		if (fdset.Wait((float)(linktimeout / 1000.)) == 0)
-		{
+		if(fdset.Wait((float)linktimeout / 1000.0)==0){
 			return;
 		}
 		howmanytimes++;
@@ -1354,6 +1343,7 @@ lclient::lclient(void){
 	intoutbuffer = (s32*)outbuffer;
 	u16outbuffer = (u16*)outbuffer;
 	numtransfers = 0;
+	oncesend = false;
 	return;
 }
 
@@ -1372,7 +1362,7 @@ bool lclient::Init(sf::IPAddress addr, ClientInfoDisplay *cid){
 	lanlink.terminate = false;
 	lanlink.thread = new sf::Thread(LinkClientThread, cid);
 	lanlink.thread->Launch();
-	return true;
+	return 0;
 }
 
 void LinkClientThread(void *_cid){
@@ -1387,17 +1377,12 @@ void LinkClientThread(void *_cid){
 		// stupid SFML has no way of giving what sort of error occurred
 		// so we'll just have to do a retry loop, I guess.
 		cid->Ping();
-		if(lanlink.terminate)
-			goto CloseInfoDisplay;
+		if(lanlink.terminate) return;
 		// old code had broken sleep on socket, which isn't
 		// even connected yet
 		// corrected sleep on socket worked, but this is more sane
 		// and probably less portable... works with mingw32 at least
-#if (defined __WIN32__ || defined _WIN32)
-		Sleep(100); // in milliseconds
-#else
-		usleep(100000); // in microseconds
-#endif
+		usleep(100000);
 	}
 
 	numbytes = 0;
@@ -1411,7 +1396,7 @@ void LinkClientThread(void *_cid){
 		cid->Ping();
 		if(lanlink.terminate) {
 			lanlink.tcpsocket.Close();
-			goto CloseInfoDisplay;
+			return;
 		}
 	}
 	linkid = (int)READ16LE(&u16inbuffer[0]);
@@ -1430,7 +1415,7 @@ void LinkClientThread(void *_cid){
 		cid->Ping();
 		if(lanlink.terminate) {
 			lanlink.tcpsocket.Close();
-			goto CloseInfoDisplay;
+			return;
 		}
 	}
 
@@ -1438,8 +1423,6 @@ void LinkClientThread(void *_cid){
 
 	cid->Connected();
 
-CloseInfoDisplay:
-	delete cid;
 	return;
 }
 
@@ -1470,6 +1453,7 @@ void lclient::CheckConn(void){
 			}
 		after = false;
 		oncewait = true;
+		oncesend = true;
 	}
 	return;
 }
@@ -1479,8 +1463,7 @@ void lclient::Recv(void){
 	// old code used socket # instead of mask again
 	fdset.Add(lanlink.tcpsocket);
 	// old code stripped off ms again
-	if (fdset.Wait((float)(linktimeout / 1000.)) == 0)
-	{
+	if(fdset.Wait((float)linktimeout / 1000.0)==0){
 		numtransfers = 0;
 		return;
 	}
@@ -1517,5 +1500,32 @@ void lclient::Send(){
 	WRITE16LE(&u16outbuffer[1], linkdata[linkid]);
 	lanlink.tcpsocket.Send(outbuffer, 4);
 	return;
+}
+
+
+// Uncalled
+void LinkSStop(void){
+	if(!oncewait){
+		if(linkid){
+			if(lanlink.numslaves==1) return;
+			lc.Recv();
+		}
+		else ls.Recv();
+
+		oncewait = true;
+		UPDATE_REG(COMM_SIOMULTI1, linkdata[1]);
+		UPDATE_REG(COMM_SIOMULTI2, linkdata[2]);
+		UPDATE_REG(COMM_SIOMULTI3, linkdata[3]);
+	}
+	return;
+}
+
+// ??? Called when COMM_SIODATA8 written
+void LinkSSend(u16 value){
+	if(linkid&&!lc.oncesend){
+		linkdata[linkid] = value;
+		lc.Send();
+		lc.oncesend = true;
+	}
 }
 #endif

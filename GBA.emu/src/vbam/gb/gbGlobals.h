@@ -9,7 +9,7 @@ extern int gbTAMA5ramSize;
 
 extern bool useBios;
 extern bool skipBios;
-extern u8 *bios;
+//extern u8 bios[0x4000] __attribute__ ((aligned(4)));
 extern bool skipSaveGameBattery;
 extern bool skipSaveGameCheats;
 

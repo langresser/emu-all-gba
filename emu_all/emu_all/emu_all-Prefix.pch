@@ -12,3 +12,12 @@
     #import <UIKit/UIKit.h>
     #import <Foundation/Foundation.h>
 #endif
+
+// Imagine
+#import "config.h"
+
+// MD.emu
+#define LSB_FIRST
+#define NO_SCD
+#define NO_SYSTEM_PICO
+#define SUPPORT_16BPP_RENDER

@@ -18,7 +18,7 @@
 #include <util/gui/BaseMenuView.hh>
 #include "EmuSystem.hh"
 #include <StateSlotView.hh>
-#include <meta.h>
+
 #ifdef CONFIG_BLUETOOTH
 	#include <bluetooth/sys.hh>
 	#include <bluetooth/BluetoothInputDevScanner.hh>
@@ -118,7 +118,7 @@ protected:
 	TextMenuItem screenshot {"Game Screenshot"};
 
 public:
-	constexpr MenuView(): BaseMenuView(CONFIG_APP_NAME " " IMAGINE_VERSION) { }
+	constexpr MenuView(): BaseMenuView("emu" " " IMAGINE_VERSION) { }
 
 	static const uint STANDARD_ITEMS = 15;
 	static const uint MAX_SYSTEM_ITEMS = 2;

@@ -468,8 +468,10 @@ void InputManagerDeviceView::deleteDeviceConfigHandler(TextMenuItem &item, const
 
 void InputManagerDeviceView::confirmICadeMode(const Input::Event &e)
 {
+#ifdef CONFIG_INPUT_ICADE
 	iCadeMode.toggle();
 	devConf->setICadeMode(iCadeMode.on);
+#endif
 	onShow();
 	physicalControlsPresent = EmuControls::keyInputIsPresent();
 	updateOnScreenControlVisible();

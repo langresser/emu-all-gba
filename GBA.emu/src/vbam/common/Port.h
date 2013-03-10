@@ -2,6 +2,13 @@
 #define PORT_H
 
 #include "Types.h"
+#include <string.h>
+
+#ifdef __ANDROID__
+#include <sys/endian.h>
+#undef swap16
+#undef swap32
+#endif
 
 // swaps a 16-bit value
 static inline u16 swap16(u16 v)
@@ -45,14 +52,44 @@ static inline u32 swap32(u32 v)
   *((u32 *)x) = swap32((v))
 #endif
 #else
-#define READ16LE(x) \
+
+/*#define READ16LE(x) \
   *((u16 *)x)
 #define READ32LE(x) \
   *((u32 *)x)
 #define WRITE16LE(x,v) \
   *((u16 *)x) = (v)
 #define WRITE32LE(x,v) \
-  *((u32 *)x) = (v)
+  *((u32 *)x) = (v)*/
+
+static u16 READ16LE(const void *x)
+{
+	return *((u16 *)x);
+	/*u16 tmp;
+	memcpy(&tmp, ptr, 2);
+	return tmp;*/
+}
+
+static u32 READ32LE(const void *x)
+{
+	return *((u32 *)x);
+	/*u32 tmp;
+	memcpy(&tmp, ptr, 4);
+	return tmp;*/
+}
+
+static void WRITE16LE(void *x, u16 v)
+{
+	*((u16 *)x) = (v);
+	//memcpy(x, &v, 2);
+}
+
+static void WRITE32LE(void *x, u32 v)
+{
+	*((u32 *)x) = (v);
+	//memcpy(x, &v, 4);
+}
+
 #endif
 
 #endif // PORT_H

@@ -18,7 +18,6 @@
 #include <gui/View.hh>
 #include <util/gui/ViewAnimation.hh>
 #include <config/version.h>
-#include <meta.h>
 
 #ifdef ENV_NOTE
 	#define PLATFORM_INFO_STR ENV_NOTE " (" CONFIG_ARCH_STR ")"
@@ -30,7 +29,7 @@
 class CreditsView : public View
 {
 public:
-	constexpr CreditsView(const char *str): View(CONFIG_APP_NAME " " IMAGINE_VERSION), str(str) { }
+	constexpr CreditsView(const char *str): View("emu" " " IMAGINE_VERSION), str(str) { }
 	Gfx::Text text;
 	FadeViewAnimation<10> fade;
 	const char *str;

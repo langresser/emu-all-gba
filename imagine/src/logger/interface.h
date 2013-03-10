@@ -13,6 +13,8 @@ extern uint loggerVerbosity;
 
 typedef uint LoggerSeverity;
 
+#define USE_LOGGER
+
 #ifdef USE_LOGGER
 
 CallResult logger_init() ATTRS(cold);

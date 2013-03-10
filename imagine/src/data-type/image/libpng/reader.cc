@@ -26,7 +26,8 @@
 #define INITIAL_HEADER_READ_BYTES 8
 
 bool Png::supportUncommonConv = 0;
-
+#define PNG_ERROR_TEXT_SUPPORTED
+#define PNG_WARNINGS_SUPPORTED
 #ifndef PNG_ERROR_TEXT_SUPPORTED
 
 CLINK void PNGAPI EVISIBLE png_error(png_structp png_ptr, png_const_charp error_message)

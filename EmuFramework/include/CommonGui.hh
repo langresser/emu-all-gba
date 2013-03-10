@@ -33,8 +33,6 @@
 #include <TextEntry.hh>
 #include <libgen.h>
 
-#include <meta.h>
-
 bool isMenuDismissKey(const Input::Event &e);
 void startGameFromMenu();
 bool touchControlsApplicable();
@@ -606,7 +604,7 @@ void onExit(bool backgrounded)
 		if(optionNotificationIcon)
 		{
 			char title[48];
-			string_printf(title, "%s was suspended", CONFIG_APP_NAME);
+			string_printf(title, "%s was suspended", "emu");
 			Base::addNotification(title, title, EmuSystem::gameName);
 		}
 	}

@@ -107,7 +107,7 @@ void logger_vprintf(LoggerSeverity severity, const char* msg, va_list args)
 		if(strlen(logLineBuffer))
 		{
 			printToLogLineBuffer(msg, args);
-			Base::nsLog("%s", logLineBuffer);
+			printf("%s\n", logLineBuffer);
 			logLineBuffer[0] = 0;
 		}
 		else

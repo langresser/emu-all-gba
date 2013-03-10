@@ -4,6 +4,15 @@
 #ifndef GB_APU_H
 #define GB_APU_H
 
+namespace Gb_ApuTypes
+{
+	enum mode_t {
+		mode_dmg,   // Game Boy monochrome
+		mode_cgb,   // Game Boy Color
+		mode_agb    // Game Boy Advance
+	};
+}
+
 #include "Gb_Oscs.h"
 
 struct gb_apu_state_t;
@@ -13,12 +22,12 @@ public:
 // Basics
 
 	// Clock rate that sound hardware runs at.
-	enum { clock_rate = 4194304 * GB_APU_OVERCLOCK };
+	static const int clock_rate = 4194304 * GB_APU_OVERCLOCK;
 
 	// Sets buffer(s) to generate sound into. If left and right are NULL, output is mono.
 	// If all are NULL, no output is generated but other emulation still runs.
 	// If chan is specified, only that channel's output is changed, otherwise all are.
-	enum { osc_count = 4 }; // 0: Square 1, 1: Square 2, 2: Wave, 3: Noise
+	static const unsigned int osc_count = 4; // 0: Square 1, 1: Square 2, 2: Wave, 3: Noise
 	void set_output( Blip_Buffer* center, Blip_Buffer* left = NULL, Blip_Buffer* right = NULL,
 			int chan = osc_count );
 
@@ -33,9 +42,9 @@ public:
 
 	// Reads and writes must be within the start_addr to end_addr range, inclusive.
 	// Addresses outside this range are not mapped to the sound hardware.
-	enum { start_addr = 0xFF10 };
-	enum { end_addr   = 0xFF3F };
-	enum { register_count = end_addr - start_addr + 1 };
+	static const unsigned int start_addr = 0xFF10;
+	static const unsigned int end_addr   = 0xFF3F;
+	static const unsigned int register_count = end_addr - start_addr + 1;
 
 	// Times are specified as the number of clocks since the beginning of the
 	// current time frame.
@@ -53,7 +62,7 @@ public:
 // Sound adjustments
 
 	// Sets overall volume, where 1.0 is normal.
-	void volume( double );
+	void volume( float );
 
 	// If true, reduces clicking by disabling DAC biasing. Note that this reduces
 	// emulation accuracy, since the clicks are authentic.
@@ -76,7 +85,7 @@ public:
 
 	// Sets frame sequencer rate, where 1.0 is normal. Meant for adjusting the
 	// tempo in a game music player.
-	void set_tempo( double );
+	void set_tempo( float );
 
 // Save states
 
@@ -89,7 +98,7 @@ public:
 	blargg_err_t load_state( gb_apu_state_t const& in );
 
 public:
-	Gb_Apu();
+    Gb_Apu() {};
 
 	// Use set_output() in place of these
 	BLARGG_DEPRECATED void output    (        Blip_Buffer* c                                 ) { set_output( c, c, c    ); }
@@ -102,20 +111,21 @@ private:
 	Gb_Apu( const Gb_Apu& );
 	Gb_Apu& operator = ( const Gb_Apu& );
 
-	Gb_Osc*     oscs [osc_count];
-	blip_time_t last_time;          // time sound emulator has been run to
-	blip_time_t frame_period;       // clocks between each frame sequencer step
-	double      volume_;
-	bool        reduce_clicks_;
+	Gb_Osc*     oscs [osc_count] {&square1, &square2, &wave, &noise};
+	blip_time_t last_time = 0;          // time sound emulator has been run to
+	blip_time_t frame_period = 4194304 / 512;       // clocks between each frame sequencer step
+	float      volume_ = 1.0;
+	bool        reduce_clicks_ = false;
+	static unsigned const wave_ram   = 0xFF30;
 
-	Gb_Sweep_Square square1;
-	Gb_Square       square2;
-	Gb_Wave         wave;
-	Gb_Noise        noise;
-	blip_time_t     frame_time;     // time of next frame sequencer action
-	int             frame_phase;    // phase of next frame sequencer step
-	enum { regs_size = register_count + 0x10 };
-	BOOST::uint8_t  regs [regs_size];// last values written to registers
+	Gb_Sweep_Square square1 {&regs [0 * 5], &good_synth, &med_synth};
+	Gb_Square       square2 {&regs [1 * 5], &good_synth, &med_synth};
+	Gb_Wave         wave {&regs [2 * 5], &good_synth, &med_synth, &regs [wave_ram - start_addr]};
+	Gb_Noise        noise {&regs [3 * 5], &good_synth, &med_synth};
+	blip_time_t     frame_time = 0;     // time of next frame sequencer action
+	int             frame_phase = 0;    // phase of next frame sequencer step
+	static const unsigned int regs_size = register_count + 0x10;
+	BOOST::uint8_t  regs [regs_size] {0};// last values written to registers
 
 	// large objects after everything else
 	Gb_Osc::Good_Synth  good_synth;
@@ -151,7 +161,7 @@ struct gb_apu_state_t
 	typedef unsigned char val_t [4];
 #endif
 
-	enum { format0 = 0x50414247 };
+	static const unsigned int format0 = 0x50414247;
 
 	val_t format;   // format of all following data
 	val_t version;  // later versions just add fields to end

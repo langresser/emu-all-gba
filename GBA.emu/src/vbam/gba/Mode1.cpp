@@ -2,36 +2,43 @@
 #include "Globals.h"
 #include "GBAGfx.h"
 
-void mode1RenderLine()
+void mode1RenderLine(MixColorType *lineMix, GBALCD &lcd, const GBAMem::IoMem &ioMem)
 {
-  u16 *palette = (u16 *)paletteRAM;
+#ifdef GBALCD_TEMP_LINE_BUFFER
+	u32 lcd.line0[240];
+	//gfxClearArray(lcd.line0);
+	u32 lcd.line1[240];
+	//gfxClearArray(lcd.line1);
+	u32 lcd.line2[240];
+	//gfxClearArray(lcd.line2);
+	u32 lcd.lineOBJ[240];
+#endif
+  const u16 *palette = (u16 *)lcd.paletteRAM;
+  const auto BLDMOD = ioMem.BLDMOD;
+  const auto COLEV = ioMem.COLEV;
+  const auto COLY = ioMem.COLY;
+  const auto VCOUNT = ioMem.VCOUNT;
+  const auto MOSAIC = ioMem.MOSAIC;
+  const auto DISPCNT = ioMem.DISPCNT;
 
-  if(DISPCNT & 0x80) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;
-    return;
+  if(lcd.layerEnable & 0x0100) {
+    gfxDrawTextScreen(lcd.vram, ioMem.BG0CNT, ioMem.BG0HOFS, ioMem.BG0VOFS, lcd.line0, VCOUNT, MOSAIC, palette);
   }
 
-  if(layerEnable & 0x0100) {
-    gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
+  if(lcd.layerEnable & 0x0200) {
+    gfxDrawTextScreen(lcd.vram, ioMem.BG1CNT, ioMem.BG1HOFS, ioMem.BG1VOFS, lcd.line1, VCOUNT, MOSAIC, palette);
   }
 
-  if(layerEnable & 0x0200) {
-    gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  }
-
-  if(layerEnable & 0x0400) {
-    int changed = gfxBG2Changed;
-    if(gfxLastVCOUNT > VCOUNT)
+  if(lcd.layerEnable & 0x0400) {
+    int changed = lcd.gfxBG2Changed;
+    if(lcd.gfxLastVCOUNT > VCOUNT)
       changed = 3;
-    gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
-                     BG2PA, BG2PB, BG2PC, BG2PD,
-                     gfxBG2X, gfxBG2Y, changed, line2);
+    gfxDrawRotScreen(lcd.vram, ioMem.BG2CNT, ioMem.BG2X_L, ioMem.BG2X_H, ioMem.BG2Y_L, ioMem.BG2Y_H,
+    		ioMem.BG2PA, ioMem.BG2PB, ioMem.BG2PC, ioMem.BG2PD,
+    		lcd.gfxBG2X, lcd.gfxBG2Y, changed, lcd.line2, VCOUNT, MOSAIC, palette);
   }
 
-  gfxDrawSprites(lineOBJ);
+  gfxDrawSprites(lcd, lcd.lineOBJ, VCOUNT, MOSAIC, DISPCNT);
 
   u32 backdrop;
   if(customBackdropColor == -1) {
@@ -44,23 +51,23 @@ void mode1RenderLine()
     u32 color = backdrop;
     u8 top = 0x20;
 
-    if(line0[x] < color) {
-      color = line0[x];
+    if(lcd.line0[x] < color) {
+      color = lcd.line0[x];
       top = 0x01;
     }
 
-    if((u8)(line1[x]>>24) < (u8)(color >> 24)) {
-      color = line1[x];
+    if((u8)(lcd.line1[x]>>24) < (u8)(color >> 24)) {
+      color = lcd.line1[x];
       top = 0x02;
     }
 
-    if((u8)(line2[x]>>24) < (u8)(color >> 24)) {
-      color = line2[x];
+    if((u8)(lcd.line2[x]>>24) < (u8)(color >> 24)) {
+      color = lcd.line2[x];
       top = 0x04;
     }
 
-    if((u8)(lineOBJ[x]>>24) < (u8)(color >> 24)) {
-      color = lineOBJ[x];
+    if((u8)(lcd.lineOBJ[x]>>24) < (u8)(color >> 24)) {
+      color = lcd.lineOBJ[x];
       top = 0x10;
     }
 
@@ -69,18 +76,18 @@ void mode1RenderLine()
       u32 back = backdrop;
       u8 top2 = 0x20;
 
-      if((u8)(line0[x]>>24) < (u8)(back >> 24)) {
-        back = line0[x];
+      if((u8)(lcd.line0[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line0[x];
         top2 = 0x01;
       }
 
-      if((u8)(line1[x]>>24) < (u8)(back >> 24)) {
-        back = line1[x];
+      if((u8)(lcd.line1[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line1[x];
         top2 = 0x02;
       }
 
-      if((u8)(line2[x]>>24) < (u8)(back >> 24)) {
-        back = line2[x];
+      if((u8)(lcd.line2[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line2[x];
         top2 = 0x04;
       }
 
@@ -102,43 +109,50 @@ void mode1RenderLine()
       }
     }
 
-    lineMix[x] = color;
+    lineMix[x] = convColor(color);
   }
-  gfxBG2Changed = 0;
-  gfxLastVCOUNT = VCOUNT;
+  lcd.gfxBG2Changed = 0;
+  lcd.gfxLastVCOUNT = VCOUNT;
 }
 
-void mode1RenderLineNoWindow()
+void mode1RenderLineNoWindow(MixColorType *lineMix, GBALCD &lcd, const GBAMem::IoMem &ioMem)
 {
-  u16 *palette = (u16 *)paletteRAM;
+#ifdef GBALCD_TEMP_LINE_BUFFER
+	u32 lcd.line0[240];
+	//gfxClearArray(lcd.line0);
+	u32 lcd.line1[240];
+	//gfxClearArray(lcd.line1);
+	u32 lcd.line2[240];
+	//gfxClearArray(lcd.line2);
+	u32 lcd.lineOBJ[240];
+#endif
+  const u16 *palette = (u16 *)lcd.paletteRAM;
+  const auto BLDMOD = ioMem.BLDMOD;
+  const auto COLEV = ioMem.COLEV;
+  const auto COLY = ioMem.COLY;
+  const auto VCOUNT = ioMem.VCOUNT;
+  const auto MOSAIC = ioMem.MOSAIC;
+  const auto DISPCNT = ioMem.DISPCNT;
 
-  if(DISPCNT & 0x80) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;
-    return;
+  if(lcd.layerEnable & 0x0100) {
+    gfxDrawTextScreen(lcd.vram, ioMem.BG0CNT, ioMem.BG0HOFS, ioMem.BG0VOFS, lcd.line0, VCOUNT, MOSAIC, palette);
   }
 
-  if(layerEnable & 0x0100) {
-    gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
+
+  if(lcd.layerEnable & 0x0200) {
+    gfxDrawTextScreen(lcd.vram, ioMem.BG1CNT, ioMem.BG1HOFS, ioMem.BG1VOFS, lcd.line1, VCOUNT, MOSAIC, palette);
   }
 
-
-  if(layerEnable & 0x0200) {
-    gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  }
-
-  if(layerEnable & 0x0400) {
-    int changed = gfxBG2Changed;
-    if(gfxLastVCOUNT > VCOUNT)
+  if(lcd.layerEnable & 0x0400) {
+    int changed = lcd.gfxBG2Changed;
+    if(lcd.gfxLastVCOUNT > VCOUNT)
       changed = 3;
-    gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
-                     BG2PA, BG2PB, BG2PC, BG2PD,
-                     gfxBG2X, gfxBG2Y, changed, line2);
+    gfxDrawRotScreen(lcd.vram, ioMem.BG2CNT, ioMem.BG2X_L, ioMem.BG2X_H, ioMem.BG2Y_L, ioMem.BG2Y_H,
+    		ioMem.BG2PA, ioMem.BG2PB, ioMem.BG2PC, ioMem.BG2PD,
+    		lcd.gfxBG2X, lcd.gfxBG2Y, changed, lcd.line2, VCOUNT, MOSAIC, palette);
   }
 
-  gfxDrawSprites(lineOBJ);
+  gfxDrawSprites(lcd, lcd.lineOBJ, VCOUNT, MOSAIC, DISPCNT);
 
   u32 backdrop;
   if(customBackdropColor == -1) {
@@ -151,23 +165,23 @@ void mode1RenderLineNoWindow()
     u32 color = backdrop;
     u8 top = 0x20;
 
-    if(line0[x] < color) {
-      color = line0[x];
+    if(lcd.line0[x] < color) {
+      color = lcd.line0[x];
       top = 0x01;
     }
 
-    if((u8)(line1[x]>>24) < (u8)(color >> 24)) {
-      color = line1[x];
+    if((u8)(lcd.line1[x]>>24) < (u8)(color >> 24)) {
+      color = lcd.line1[x];
       top = 0x02;
     }
 
-    if((u8)(line2[x]>>24) < (u8)(color >> 24)) {
-      color = line2[x];
+    if((u8)(lcd.line2[x]>>24) < (u8)(color >> 24)) {
+      color = lcd.line2[x];
       top = 0x04;
     }
 
-    if((u8)(lineOBJ[x]>>24) < (u8)(color >> 24)) {
-      color = lineOBJ[x];
+    if((u8)(lcd.lineOBJ[x]>>24) < (u8)(color >> 24)) {
+      color = lcd.lineOBJ[x];
       top = 0x10;
     }
 
@@ -180,30 +194,30 @@ void mode1RenderLineNoWindow()
           if(top & BLDMOD) {
             u32 back = backdrop;
             u8 top2 = 0x20;
-            if((u8)(line0[x]>>24) < (u8)(back >> 24)) {
+            if((u8)(lcd.line0[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x01) {
-                back = line0[x];
+                back = lcd.line0[x];
                 top2 = 0x01;
               }
             }
 
-            if((u8)(line1[x]>>24) < (u8)(back >> 24)) {
+            if((u8)(lcd.line1[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x02) {
-                back = line1[x];
+                back = lcd.line1[x];
                 top2 = 0x02;
               }
             }
 
-            if((u8)(line2[x]>>24) < (u8)(back >> 24)) {
+            if((u8)(lcd.line2[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x04) {
-                back = line2[x];
+                back = lcd.line2[x];
                 top2 = 0x04;
               }
             }
 
-            if((u8)(lineOBJ[x]>>24) < (u8)(back >> 24)) {
+            if((u8)(lcd.lineOBJ[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x10) {
-                back = lineOBJ[x];
+                back = lcd.lineOBJ[x];
                 top2 = 0x10;
               }
             }
@@ -229,18 +243,18 @@ void mode1RenderLineNoWindow()
       u32 back = backdrop;
       u8 top2 = 0x20;
 
-      if((u8)(line0[x]>>24) < (u8)(back >> 24)) {
-        back = line0[x];
+      if((u8)(lcd.line0[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line0[x];
         top2 = 0x01;
       }
 
-      if((u8)(line1[x]>>24) < (u8)(back >> 24)) {
-        back = line1[x];
+      if((u8)(lcd.line1[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line1[x];
         top2 = 0x02;
       }
 
-      if((u8)(line2[x]>>24) < (u8)(back >> 24)) {
-        back = line2[x];
+      if((u8)(lcd.line2[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line2[x];
         top2 = 0x04;
       }
 
@@ -262,28 +276,39 @@ void mode1RenderLineNoWindow()
       }
     }
 
-    lineMix[x] = color;
+    lineMix[x] = convColor(color);
   }
-  gfxBG2Changed = 0;
-  gfxLastVCOUNT = VCOUNT;
+  lcd.gfxBG2Changed = 0;
+  lcd.gfxLastVCOUNT = VCOUNT;
 }
 
-void mode1RenderLineAll()
+void mode1RenderLineAll(MixColorType *lineMix, GBALCD &lcd, const GBAMem::IoMem &ioMem)
 {
-  u16 *palette = (u16 *)paletteRAM;
-
-  if(DISPCNT & 0x80) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;
-    return;
-  }
+#ifdef GBALCD_TEMP_LINE_BUFFER
+	u32 lcd.line0[240];
+	//gfxClearArray(lcd.line0);
+	u32 lcd.line1[240];
+	//gfxClearArray(lcd.line1);
+	u32 lcd.line2[240];
+	//gfxClearArray(lcd.line2);
+	u32 lcd.lineOBJ[240];
+#endif
+  const u16 *palette = (u16 *)lcd.paletteRAM;
+  const auto BLDMOD = ioMem.BLDMOD;
+  const auto COLEV = ioMem.COLEV;
+  const auto COLY = ioMem.COLY;
+  const auto WIN0V = ioMem.WIN0V;
+  const auto WIN1V = ioMem.WIN1V;
+  const auto WININ = ioMem.WININ;
+  const auto WINOUT = ioMem.WINOUT;
+  const auto VCOUNT = ioMem.VCOUNT;
+  const auto MOSAIC = ioMem.MOSAIC;
+  const auto DISPCNT = ioMem.DISPCNT;
 
   bool inWindow0 = false;
   bool inWindow1 = false;
 
-  if(layerEnable & 0x2000) {
+  if(lcd.layerEnable & 0x2000) {
     u8 v0 = WIN0V >> 8;
     u8 v1 = WIN0V & 255;
     inWindow0 = ((v0 == v1) && (v0 >= 0xe8));
@@ -292,7 +317,7 @@ void mode1RenderLineAll()
     else
       inWindow0 |= (VCOUNT >= v0 || VCOUNT < v1);
   }
-  if(layerEnable & 0x4000) {
+  if(lcd.layerEnable & 0x4000) {
     u8 v0 = WIN1V >> 8;
     u8 v1 = WIN1V & 255;
     inWindow1 = ((v0 == v1) && (v0 >= 0xe8));
@@ -302,25 +327,25 @@ void mode1RenderLineAll()
       inWindow1 |= (VCOUNT >= v0 || VCOUNT < v1);
   }
 
-  if(layerEnable & 0x0100) {
-    gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
+  if(lcd.layerEnable & 0x0100) {
+    gfxDrawTextScreen(lcd.vram, ioMem.BG0CNT, ioMem.BG0HOFS, ioMem.BG0VOFS, lcd.line0, VCOUNT, MOSAIC, palette);
   }
 
-  if(layerEnable & 0x0200) {
-    gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
+  if(lcd.layerEnable & 0x0200) {
+    gfxDrawTextScreen(lcd.vram, ioMem.BG1CNT, ioMem.BG1HOFS, ioMem.BG1VOFS, lcd.line1, VCOUNT, MOSAIC, palette);
   }
 
-  if(layerEnable & 0x0400) {
-    int changed = gfxBG2Changed;
-    if(gfxLastVCOUNT > VCOUNT)
+  if(lcd.layerEnable & 0x0400) {
+    int changed = lcd.gfxBG2Changed;
+    if(lcd.gfxLastVCOUNT > VCOUNT)
       changed = 3;
-    gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
-                     BG2PA, BG2PB, BG2PC, BG2PD,
-                     gfxBG2X, gfxBG2Y, changed, line2);
+    gfxDrawRotScreen(lcd.vram, ioMem.BG2CNT, ioMem.BG2X_L, ioMem.BG2X_H, ioMem.BG2Y_L, ioMem.BG2Y_H,
+    		ioMem.BG2PA, ioMem.BG2PB, ioMem.BG2PC, ioMem.BG2PD,
+    		lcd.gfxBG2X, lcd.gfxBG2Y, changed, lcd.line2, VCOUNT, MOSAIC, palette);
   }
 
-  gfxDrawSprites(lineOBJ);
-  gfxDrawOBJWin(lineOBJWin);
+  gfxDrawSprites(lcd, lcd.lineOBJ, VCOUNT, MOSAIC, DISPCNT);
+  gfxDrawOBJWin(lcd, lcd.lineOBJWin, VCOUNT, DISPCNT);
 
   u32 backdrop;
   if(customBackdropColor == -1) {
@@ -338,38 +363,38 @@ void mode1RenderLineAll()
     u8 top = 0x20;
     u8 mask = outMask;
 
-    if(!(lineOBJWin[x] & 0x80000000)) {
+    if(!(lcd.lineOBJWin[x] & 0x80000000)) {
       mask = WINOUT >> 8;
     }
 
     if(inWindow1) {
-      if(gfxInWin1[x])
+      if(lcd.gfxInWin1[x])
         mask = inWin1Mask;
     }
 
     if(inWindow0) {
-      if(gfxInWin0[x]) {
+      if(lcd.gfxInWin0[x]) {
         mask = inWin0Mask;
       }
     }
 
-    if(line0[x] < color && (mask & 1)) {
-      color = line0[x];
+    if(lcd.line0[x] < color && (mask & 1)) {
+      color = lcd.line0[x];
       top = 0x01;
     }
 
-    if((u8)(line1[x]>>24) < (u8)(color >> 24) && (mask & 2)) {
-      color = line1[x];
+    if((u8)(lcd.line1[x]>>24) < (u8)(color >> 24) && (mask & 2)) {
+      color = lcd.line1[x];
       top = 0x02;
     }
 
-    if((u8)(line2[x]>>24) < (u8)(color >> 24) && (mask & 4)) {
-      color = line2[x];
+    if((u8)(lcd.line2[x]>>24) < (u8)(color >> 24) && (mask & 4)) {
+      color = lcd.line2[x];
       top = 0x04;
     }
 
-    if((u8)(lineOBJ[x]>>24) < (u8)(color >> 24) && (mask & 16)) {
-      color = lineOBJ[x];
+    if((u8)(lcd.lineOBJ[x]>>24) < (u8)(color >> 24) && (mask & 16)) {
+      color = lcd.lineOBJ[x];
       top = 0x10;
     }
 
@@ -378,18 +403,18 @@ void mode1RenderLineAll()
       u32 back = backdrop;
       u8 top2 = 0x20;
 
-      if((mask & 1) && (u8)(line0[x]>>24) < (u8)(back >> 24)) {
-        back = line0[x];
+      if((mask & 1) && (u8)(lcd.line0[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line0[x];
         top2 = 0x01;
       }
 
-      if((mask & 2) && (u8)(line1[x]>>24) < (u8)(back >> 24)) {
-        back = line1[x];
+      if((mask & 2) && (u8)(lcd.line1[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line1[x];
         top2 = 0x02;
       }
 
-      if((mask & 4) && (u8)(line2[x]>>24) < (u8)(back >> 24)) {
-        back = line2[x];
+      if((mask & 4) && (u8)(lcd.line2[x]>>24) < (u8)(back >> 24)) {
+        back = lcd.line2[x];
         top2 = 0x04;
       }
 
@@ -420,30 +445,30 @@ void mode1RenderLineAll()
             u32 back = backdrop;
             u8 top2 = 0x20;
 
-            if((mask & 1) && (u8)(line0[x]>>24) < (u8)(back >> 24)) {
+            if((mask & 1) && (u8)(lcd.line0[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x01) {
-                back = line0[x];
+                back = lcd.line0[x];
                 top2 = 0x01;
               }
             }
 
-            if((mask & 2) && (u8)(line1[x]>>24) < (u8)(back >> 24)) {
+            if((mask & 2) && (u8)(lcd.line1[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x02) {
-                back = line1[x];
+                back = lcd.line1[x];
                 top2 = 0x02;
               }
             }
 
-            if((mask & 4) && (u8)(line2[x]>>24) < (u8)(back >> 24)) {
+            if((mask & 4) && (u8)(lcd.line2[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x04) {
-                back = line2[x];
+                back = lcd.line2[x];
                 top2 = 0x04;
               }
             }
 
-            if((mask & 16) && (u8)(lineOBJ[x]>>24) < (u8)(back >> 24)) {
+            if((mask & 16) && (u8)(lcd.lineOBJ[x]>>24) < (u8)(back >> 24)) {
               if(top != 0x10) {
-                back = lineOBJ[x];
+                back = lcd.lineOBJ[x];
                 top2 = 0x10;
               }
             }
@@ -466,8 +491,8 @@ void mode1RenderLineAll()
       }
     }
 
-    lineMix[x] = color;
+    lineMix[x] = convColor(color);
   }
-  gfxBG2Changed = 0;
-  gfxLastVCOUNT = VCOUNT;
+  lcd.gfxBG2Changed = 0;
+  lcd.gfxLastVCOUNT = VCOUNT;
 }

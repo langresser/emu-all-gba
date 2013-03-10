@@ -3,7 +3,7 @@
 // Blip_Buffer 0.4.1
 #ifndef BLIP_BUFFER_H
 #define BLIP_BUFFER_H
-
+#include "Globals.h"
 	// internal
 	#include <limits.h>
 	#if INT_MAX < 0x7FFFFFFF || LONG_MAX == 0x7FFFFFFF
