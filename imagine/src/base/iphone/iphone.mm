@@ -16,6 +16,9 @@
 #import <Foundation/NSPathUtilities.h>
 
 #include "platform_util.h"
+#import "EmuGameViewController.h"
+
+int openglViewIsInit = 0;
 
 namespace Base
 {
@@ -67,7 +70,6 @@ static ICadeHelper iCade = { nil };
 static UIViewController *viewCtrl;
 
 static const int USE_DEPTH_BUFFER = 0;
-static int openglViewIsInit = 0;
 
 void cancelCallback(CallbackRef *ref)
 {
@@ -114,19 +116,6 @@ void stopAnimation()
 uint appState = APP_RUNNING;
 
 }
-
-@interface ImagineUIViewController : UIViewController
-
-@end
-
-@implementation ImagineUIViewController
-
-- (BOOL)shouldAutorotate
-{
-	return NO;
-}
-
-@end
 
 // A class extension to declare private methods
 @interface EAGLView ()
@@ -267,7 +256,7 @@ uint appState = APP_RUNNING;
 		return NO;
 	}
 	
-	Base::openglViewIsInit = 1;
+	openglViewIsInit = 1;
 	return YES;
 }
 
@@ -285,7 +274,7 @@ uint appState = APP_RUNNING;
 		depthRenderbuffer = 0;
 	}
 	
-	Base::openglViewIsInit = 0;
+	openglViewIsInit = 0;
 }
 
 - (void)dealloc
@@ -446,16 +435,19 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	Base::engineInit();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	Base::setAutoOrientation(1);
-	
-    viewCtrl = [[ImagineUIViewController alloc] init];
-    viewCtrl.view = glView;
     
-    gameListVC = [[GameListViewController alloc]init];
-    gameVC = [[UINavigationController alloc] initWithRootViewController:gameListVC];
-    [gameVC setNavigationBarHidden:YES];
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.window.rootViewController = gameVC;
+    window = [[UIWindow alloc]initWithFrame:rect];
+    [[MDGameViewController sharedInstance] setView:glView];
+    
+    if ([[UIDevice currentDevice].systemVersion floatValue] >= 6.0) {
+        window.rootViewController = [MDGameViewController sharedInstance];
+    } else {
+        [window addSubview:[MDGameViewController sharedInstance].view];
+    }
+    
     [self.window makeKeyAndVisible];
+    
+    [[MDGameViewController sharedInstance] showGameList];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];

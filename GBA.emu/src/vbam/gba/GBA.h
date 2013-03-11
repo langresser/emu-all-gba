@@ -10,6 +10,7 @@
 #include <util/builtins.h>
 #include <util/ansiTypes.h>
 #include <logger/interface.h>
+#include <string.h>
 
 #define SAVE_GAME_VERSION_1 1
 #define SAVE_GAME_VERSION_2 2

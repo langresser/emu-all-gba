@@ -16,6 +16,9 @@
 #import "MobClick.h"
 #import "TDBadgedCell.h"
 
+#include <string>
+#include "EmuSystem.hh"
+
 extern int g_currentMB ;
 
 @interface RomData : NSObject
@@ -495,26 +498,40 @@ extern int g_currentMB ;
     }
 }
 
+
+std::string g_romPath = "";
+bool g_isUserRom = false;
+extern void startGameFromMenu();
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
     NSString* romPath = nil;
-    NSString* romName = nil;
-
-        NSDictionary* dict = [[[m_romData objectAtIndex:indexPath.section]objectForKey:@"roms"]objectAtIndex:indexPath.row];
-        romName = [dict objectForKey:@"rom"];
-        romPath = [[[NSBundle mainBundle]bundlePath]stringByAppendingPathComponent: romName];
+    BOOL isUserRom = NO;
+    NSDictionary* dict = [[[m_romData objectAtIndex:indexPath.section]objectForKey:@"roms"]objectAtIndex:indexPath.row];
+    romPath = [dict objectForKey:@"rom"];
+    isUserRom = NO;
     
-    [MobClick event:@"openrom" label:romName];
-    m_currentSelectRom = romName;
-    m_currentRomPath = romPath;
+    [MobClick event:@"openrom" label:romPath];
     
-    extern NSString* g_currentRom;
-    g_currentRom = romName;
-
+    m_currentSelectRom = romPath;
+    
     if (![self isRomPurchase:indexPath notify:YES]) {
         return;
+    }
+    
+    [self dismissModalViewControllerAnimated:NO];
+    
+    extern int openglViewIsInit;
+    if (openglViewIsInit == 0) {
+        g_romPath = [romPath UTF8String];
+        g_isUserRom = isUserRom;
+    } else {
+        // 默认打开
+        if(EmuSystem::loadGame([romPath UTF8String]))
+        {
+            startGameFromMenu();
+        }
     }
 }
 

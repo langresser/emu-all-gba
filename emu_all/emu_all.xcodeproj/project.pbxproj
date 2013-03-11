@@ -266,9 +266,9 @@
 		17DB1DA016ECDBC700B8D346 /* romlist.json in Resources */ = {isa = PBXBuildFile; fileRef = 17DB1D5D16ECDBC700B8D346 /* romlist.json */; };
 		17DB1DA216ECDBDA00B8D346 /* SKIN_1 in Resources */ = {isa = PBXBuildFile; fileRef = 17DB1DA116ECDBDA00B8D346 /* SKIN_1 */; };
 		17DB1DAB16ECDCF900B8D346 /* DView.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DA416ECDCF800B8D346 /* DView.m */; };
-		17DB1DAC16ECDCF900B8D346 /* EmuControllerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DA616ECDCF800B8D346 /* EmuControllerView.m */; };
-		17DB1DAD16ECDCF900B8D346 /* GameListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DA816ECDCF800B8D346 /* GameListViewController.m */; };
-		17DB1DAE16ECDCF900B8D346 /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DAA16ECDCF800B8D346 /* SettingViewController.m */; };
+		17DB1DAC16ECDCF900B8D346 /* EmuControlView.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DA616ECDCF800B8D346 /* EmuControlView.m */; };
+		17DB1DAD16ECDCF900B8D346 /* GameListViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DA816ECDCF800B8D346 /* GameListViewController.mm */; };
+		17DB1DAE16ECDCF900B8D346 /* SettingViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DAA16ECDCF800B8D346 /* SettingViewController.mm */; };
 		17DB1DDA16ECDD5900B8D346 /* CPPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DB216ECDD5900B8D346 /* CPPickerView.m */; };
 		17DB1DDB16ECDD5900B8D346 /* CPPickerViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DB416ECDD5900B8D346 /* CPPickerViewCell.m */; };
 		17DB1DDC16ECDD5900B8D346 /* horizontalPickerShadow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 17DB1DB616ECDD5900B8D346 /* horizontalPickerShadow@2x.png */; };
@@ -284,7 +284,7 @@
 		17DB1DE616ECDD5900B8D346 /* star_highlighted.png in Resources */ = {isa = PBXBuildFile; fileRef = 17DB1DC416ECDD5900B8D346 /* star_highlighted.png */; };
 		17DB1DE716ECDD5900B8D346 /* star_highlighted@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 17DB1DC516ECDD5900B8D346 /* star_highlighted@2x.png */; };
 		17DB1DE816ECDD5900B8D346 /* UIView+Subviews.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DC716ECDD5900B8D346 /* UIView+Subviews.m */; };
-		17DB1DE916ECDD5900B8D346 /* iosUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DC916ECDD5900B8D346 /* iosUtil.m */; };
+		17DB1DE916ECDD5900B8D346 /* iosUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DC916ECDD5900B8D346 /* iosUtil.mm */; };
 		17DB1DEA16ECDD5900B8D346 /* JSONKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DCB16ECDD5900B8D346 /* JSONKit.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		17DB1DEB16ECDD5900B8D346 /* NSString+MD5Addition.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DCD16ECDD5900B8D346 /* NSString+MD5Addition.m */; };
 		17DB1DEC16ECDD5900B8D346 /* platform_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DCE16ECDD5900B8D346 /* platform_util.cpp */; };
@@ -293,6 +293,7 @@
 		17DB1DEF16ECDD5900B8D346 /* UIGlossyButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DD516ECDD5900B8D346 /* UIGlossyButton.m */; };
 		17DB1DF016ECDD5900B8D346 /* UIImageView+Reflected.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DD716ECDD5900B8D346 /* UIImageView+Reflected.m */; };
 		17DB1DF116ECDD5900B8D346 /* UIView+LayerEffects.m in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1DD916ECDD5900B8D346 /* UIView+LayerEffects.m */; };
+		17DB1E3916EE32AF00B8D346 /* EmuGameViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 17DB1E3816EE32AF00B8D346 /* EmuGameViewController.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -860,12 +861,12 @@
 		17DB1DA116ECDBDA00B8D346 /* SKIN_1 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SKIN_1; sourceTree = "<group>"; };
 		17DB1DA316ECDCF800B8D346 /* DView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DView.h; sourceTree = "<group>"; };
 		17DB1DA416ECDCF800B8D346 /* DView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DView.m; sourceTree = "<group>"; };
-		17DB1DA516ECDCF800B8D346 /* EmuControllerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmuControllerView.h; sourceTree = "<group>"; };
-		17DB1DA616ECDCF800B8D346 /* EmuControllerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmuControllerView.m; sourceTree = "<group>"; };
+		17DB1DA516ECDCF800B8D346 /* EmuControlView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmuControlView.h; sourceTree = "<group>"; };
+		17DB1DA616ECDCF800B8D346 /* EmuControlView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmuControlView.m; sourceTree = "<group>"; };
 		17DB1DA716ECDCF800B8D346 /* GameListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameListViewController.h; sourceTree = "<group>"; };
-		17DB1DA816ECDCF800B8D346 /* GameListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameListViewController.m; sourceTree = "<group>"; };
+		17DB1DA816ECDCF800B8D346 /* GameListViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GameListViewController.mm; sourceTree = "<group>"; };
 		17DB1DA916ECDCF800B8D346 /* SettingViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingViewController.h; sourceTree = "<group>"; };
-		17DB1DAA16ECDCF800B8D346 /* SettingViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingViewController.m; sourceTree = "<group>"; };
+		17DB1DAA16ECDCF800B8D346 /* SettingViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SettingViewController.mm; sourceTree = "<group>"; };
 		17DB1DB116ECDD5900B8D346 /* CPPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPPickerView.h; sourceTree = "<group>"; };
 		17DB1DB216ECDD5900B8D346 /* CPPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPPickerView.m; sourceTree = "<group>"; };
 		17DB1DB316ECDD5900B8D346 /* CPPickerViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPPickerViewCell.h; sourceTree = "<group>"; };
@@ -887,7 +888,7 @@
 		17DB1DC616ECDD5900B8D346 /* UIView+Subviews.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Subviews.h"; sourceTree = "<group>"; };
 		17DB1DC716ECDD5900B8D346 /* UIView+Subviews.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Subviews.m"; sourceTree = "<group>"; };
 		17DB1DC816ECDD5900B8D346 /* iosUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iosUtil.h; sourceTree = "<group>"; };
-		17DB1DC916ECDD5900B8D346 /* iosUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = iosUtil.m; sourceTree = "<group>"; };
+		17DB1DC916ECDD5900B8D346 /* iosUtil.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = iosUtil.mm; sourceTree = "<group>"; };
 		17DB1DCA16ECDD5900B8D346 /* JSONKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSONKit.h; sourceTree = "<group>"; };
 		17DB1DCB16ECDD5900B8D346 /* JSONKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSONKit.m; sourceTree = "<group>"; };
 		17DB1DCC16ECDD5900B8D346 /* NSString+MD5Addition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+MD5Addition.h"; sourceTree = "<group>"; };
@@ -904,6 +905,8 @@
 		17DB1DD716ECDD5900B8D346 /* UIImageView+Reflected.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+Reflected.m"; sourceTree = "<group>"; };
 		17DB1DD816ECDD5900B8D346 /* UIView+LayerEffects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+LayerEffects.h"; sourceTree = "<group>"; };
 		17DB1DD916ECDD5900B8D346 /* UIView+LayerEffects.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+LayerEffects.m"; sourceTree = "<group>"; };
+		17DB1E3716EE32AF00B8D346 /* EmuGameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmuGameViewController.h; sourceTree = "<group>"; };
+		17DB1E3816EE32AF00B8D346 /* EmuGameViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EmuGameViewController.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -993,17 +996,19 @@
 		17DB12E516E659A800B8D346 /* emu_all */ = {
 			isa = PBXGroup;
 			children = (
+				17DB1E3716EE32AF00B8D346 /* EmuGameViewController.h */,
+				17DB1E3816EE32AF00B8D346 /* EmuGameViewController.mm */,
 				17DB1DAF16ECDD5900B8D346 /* util */,
 				17DB155A16E65A9E00B8D346 /* iphone.h */,
 				17DB155916E65A9E00B8D346 /* iphone.mm */,
 				17DB1DA316ECDCF800B8D346 /* DView.h */,
 				17DB1DA416ECDCF800B8D346 /* DView.m */,
-				17DB1DA516ECDCF800B8D346 /* EmuControllerView.h */,
-				17DB1DA616ECDCF800B8D346 /* EmuControllerView.m */,
+				17DB1DA516ECDCF800B8D346 /* EmuControlView.h */,
+				17DB1DA616ECDCF800B8D346 /* EmuControlView.m */,
 				17DB1DA716ECDCF800B8D346 /* GameListViewController.h */,
-				17DB1DA816ECDCF800B8D346 /* GameListViewController.m */,
+				17DB1DA816ECDCF800B8D346 /* GameListViewController.mm */,
 				17DB1DA916ECDCF800B8D346 /* SettingViewController.h */,
-				17DB1DAA16ECDCF800B8D346 /* SettingViewController.m */,
+				17DB1DAA16ECDCF800B8D346 /* SettingViewController.mm */,
 				17DB1D1716ECDBC600B8D346 /* Resources */,
 				17DB1D4F16ECDBC700B8D346 /* Roms */,
 				17DB12E616E659A800B8D346 /* Supporting Files */,
@@ -2193,7 +2198,7 @@
 				17DB1DB016ECDD5900B8D346 /* CPPickerView */,
 				17DB1DBA16ECDD5900B8D346 /* DLStarRating */,
 				17DB1DC816ECDD5900B8D346 /* iosUtil.h */,
-				17DB1DC916ECDD5900B8D346 /* iosUtil.m */,
+				17DB1DC916ECDD5900B8D346 /* iosUtil.mm */,
 				17DB1DCA16ECDD5900B8D346 /* JSONKit.h */,
 				17DB1DCB16ECDD5900B8D346 /* JSONKit.m */,
 				17DB1DCC16ECDD5900B8D346 /* NSString+MD5Addition.h */,
@@ -2656,15 +2661,15 @@
 				17DB1CDC16EBB8EA00B8D346 /* Util.cpp in Sources */,
 				17DB1CFC16EBD14300B8D346 /* ResourceFontUIKit.mm in Sources */,
 				17DB1DAB16ECDCF900B8D346 /* DView.m in Sources */,
-				17DB1DAC16ECDCF900B8D346 /* EmuControllerView.m in Sources */,
-				17DB1DAD16ECDCF900B8D346 /* GameListViewController.m in Sources */,
-				17DB1DAE16ECDCF900B8D346 /* SettingViewController.m in Sources */,
+				17DB1DAC16ECDCF900B8D346 /* EmuControlView.m in Sources */,
+				17DB1DAD16ECDCF900B8D346 /* GameListViewController.mm in Sources */,
+				17DB1DAE16ECDCF900B8D346 /* SettingViewController.mm in Sources */,
 				17DB1DDA16ECDD5900B8D346 /* CPPickerView.m in Sources */,
 				17DB1DDB16ECDD5900B8D346 /* CPPickerViewCell.m in Sources */,
 				17DB1DE016ECDD5900B8D346 /* DLStarRatingControl.m in Sources */,
 				17DB1DE116ECDD5900B8D346 /* DLStarView.m in Sources */,
 				17DB1DE816ECDD5900B8D346 /* UIView+Subviews.m in Sources */,
-				17DB1DE916ECDD5900B8D346 /* iosUtil.m in Sources */,
+				17DB1DE916ECDD5900B8D346 /* iosUtil.mm in Sources */,
 				17DB1DEA16ECDD5900B8D346 /* JSONKit.m in Sources */,
 				17DB1DEB16ECDD5900B8D346 /* NSString+MD5Addition.m in Sources */,
 				17DB1DEC16ECDD5900B8D346 /* platform_util.cpp in Sources */,
@@ -2673,6 +2678,7 @@
 				17DB1DEF16ECDD5900B8D346 /* UIGlossyButton.m in Sources */,
 				17DB1DF016ECDD5900B8D346 /* UIImageView+Reflected.m in Sources */,
 				17DB1DF116ECDD5900B8D346 /* UIView+LayerEffects.m in Sources */,
+				17DB1E3916EE32AF00B8D346 /* EmuGameViewController.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2787,6 +2793,7 @@
 					../../3rdframework/png,
 					../GBA.emu/src,
 					"libs/DianJinFramework/**",
+					../imagine/src,
 				);
 				INFOPLIST_FILE = "emu_all/emu_all-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
@@ -2794,11 +2801,13 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/libs\"",
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = armv7;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -2827,6 +2836,7 @@
 					../../3rdframework/png,
 					../GBA.emu/src,
 					"libs/DianJinFramework/**",
+					../imagine/src,
 				);
 				INFOPLIST_FILE = "emu_all/emu_all-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
@@ -2839,6 +2849,7 @@
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = armv7;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

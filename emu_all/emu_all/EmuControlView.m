@@ -1,4 +1,4 @@
-#import "EmuControllerView.h"
+#import "EmuControlView.h"
 #import "iosUtil.h"
 
 #define MyCGRectContainsPoint(rect, point)						\

@@ -66,7 +66,7 @@ class EmuSystem
 	static void initOptions();
 	static void writeConfig(Io *io);
 	static bool readConfig(Io *io, uint key, uint readSize);
-	static int loadGame(const char *path);
+	static int loadGame(const char *path, bool userrom = false);
 	typedef Delegate<void (uint result, const Input::Event &e)> LoadGameCompleteDelegate;
 	static LoadGameCompleteDelegate loadGameCompleteDel;
 	static LoadGameCompleteDelegate &loadGameCompleteDelegate() { return loadGameCompleteDel; }

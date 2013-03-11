@@ -10,6 +10,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import "UIDevice+Util.h"
 #import "UIGlossyButton.h"
+#include "platform_util.h"
 
 #define kTagAutoSave  100
 #define kTagSmoothScaling 101
