@@ -438,16 +438,11 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
     
     window = [[UIWindow alloc]initWithFrame:rect];
     [[MDGameViewController sharedInstance] setView:glView];
-    
-    if ([[UIDevice currentDevice].systemVersion floatValue] >= 6.0) {
-        window.rootViewController = [MDGameViewController sharedInstance];
-    } else {
-        [window addSubview:[MDGameViewController sharedInstance].view];
-    }
+    window.rootViewController = [MDGameViewController sharedInstance];
     
     [self.window makeKeyAndVisible];
     
-    [[MDGameViewController sharedInstance] showGameList];
+//    [[MDGameViewController sharedInstance] showGameList];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];

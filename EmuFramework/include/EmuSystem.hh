@@ -84,7 +84,7 @@ class EmuSystem
 	static void stopSound();
 	static void startSound();
 	static int setupFrameSkip(uint optionVal);
-	static void setupGamePaths(const char *filePath);
+	static void setupGamePaths(const char *filePath, bool userrom);
 
 	static void clearGamePaths()
 	{

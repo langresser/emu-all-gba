@@ -294,12 +294,7 @@ int EmuSystem::loadGame(const char *path, bool userrom)
 {
 	closeGame();
 	emuView.initImage(0, 240, 160);
-    if (userrom) {
-        snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::documentsPath(), path);
-        
-    } else {
-        snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::applicationPath(), path);
-    }
+    setupGamePaths(path, userrom);
 	systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 	soundInit();
 	int size = CPULoadRom(gGba, fullGamePath);

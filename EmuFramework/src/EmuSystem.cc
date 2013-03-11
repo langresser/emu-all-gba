@@ -134,9 +134,16 @@ int EmuSystem::setupFrameSkip(uint optionVal)
 	}
 }
 
-void EmuSystem::setupGamePaths(const char *filePath)
+void EmuSystem::setupGamePaths(const char *filePath, bool userrom)
 {
 	{
+        if (userrom) {
+            snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::documentsPath(), filePath);
+            
+        } else {
+            snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::applicationPath(), filePath);
+        }
+        
 		// find the realpath the dirname portion separately in case the file is a symlink
 		FsSys::cPath dirNameTemp;
 		string_copy(dirNameTemp, filePath);
