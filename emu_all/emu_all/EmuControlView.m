@@ -10,11 +10,7 @@
 #define RADIANS(degrees) ((degrees * M_PI) / 180.0)
 #define DEGREES(radians) (radians * 180.0/M_PI)
 
-unsigned long gp2x_pad_status11;
-int num_of_joys;
-
 extern CGRect drects[100];
-extern int ndrects;
 
 unsigned long btUsed = 0;
 
@@ -31,11 +27,6 @@ static CGRect rLandscapeViewFrameNotFull;
 static CGRect rLandscapeImageBackFrame;
 
 static CGRect rShowKeyboard;
-
-CGRect rExternal;
-
-extern int nativeTVOUT;
-extern int overscanTVOUT;
 
 int iphone_controller_opacity = 50;
 int iphone_is_landscape = 0;
@@ -54,7 +45,6 @@ int emulated_height = 240;
 
 extern int iOS_landscape_buttons;
 int iOS_hide_LR=0;
-int iOS_BplusX=0;
 int iOS_landscape_buttons=4;
 int iOS_skin_data = 1;
 
@@ -84,19 +74,12 @@ static unsigned long pressedButtons;
 static unsigned long newtouches[NUM_BUTTONS];
 static unsigned long oldtouches[NUM_BUTTONS];
 
-extern void reset_sound();
-extern void sound_exit();
-extern void init_sound();
-
 @implementation EmuControllerView
-@synthesize emuWindow;
-
+@synthesize readyToSustain, sustainedButtons;
 -(id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
-//        self.backgroundColor = [UIColor yellowColor];
-        
         nameImgButton_NotPress[BTN_B] = @"button_NotPress_B.png";
         nameImgButton_NotPress[BTN_X] = @"button_NotPress_X.png";
         nameImgButton_NotPress[BTN_A] = @"button_NotPress_A.png";
@@ -145,8 +128,6 @@ extern void init_sound();
         imageBack.clearsContextBeforeDrawing = NO;
         [self addSubview:imageBack];
         
-        [self addSubview:emuWindow];
-        
         dpadView = [[UIImageView alloc]initWithFrame:frame];
         [self addSubview:dpadView];
         
@@ -159,10 +140,10 @@ extern void init_sound();
     return self;
 }
 
--(void)autoDimiss:(id)sender {
-
-     UIAlertView *alert = (UIAlertView *)sender;
-     [alert dismissWithClickedButtonIndex:0 animated:YES];
+-(void)addEmuWindow:(UIView*)view
+{
+    emuWindow = view;
+    [self insertSubview:view aboveSubview:imageBack];
 }
 
 - (void)drawRect:(CGRect)rect
@@ -210,7 +191,7 @@ extern void init_sound();
 
    int i;
     
-   btUsed = num_of_joys!=0; 
+   btUsed = NO;
    
    if(btUsed && ((!iphone_is_landscape && iOS_full_screen_port) || (iphone_is_landscape && iOS_full_screen_land)))
      return;
@@ -318,7 +299,10 @@ extern void init_sound();
        r.size.height = tmp_height;
    
    }
-    emuWindow.frame = r;
+    
+    if (emuWindow) {
+        emuWindow.frame = r;
+    }
     
     //DPAD---
     [self buildDPadView];
@@ -385,7 +369,10 @@ extern void init_sound();
        r.size.height = tmp_height;
    }
     
-    emuWindow.frame = r;
+    
+    if (emuWindow) {
+        emuWindow.frame = r;
+    }
 
     [self buildDPadView];
     dpadView.alpha = 0.5;
@@ -907,8 +894,6 @@ extern void init_sound();
         drects[21]=UpLeft;
         drects[22]=Up;
         drects[23]=UpRight;
-        
-        ndrects = 24;     
     }
     else
     {

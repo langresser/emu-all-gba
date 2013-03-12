@@ -58,7 +58,7 @@
     
     glView = [[EAGLView alloc]initWithFrame:rect];
     controlView = [[EmuControllerView alloc]initWithFrame:rect];
-    controlView.emuWindow = glView;
+    [controlView addEmuWindow:glView];
     
     [self.view addSubview:controlView];
 }
@@ -75,16 +75,33 @@
     [controlView changeUI:currentOrientation];
     
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(showSettingPopup) name:@"showsetting" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appActivatedDidFinish:) name:kDJAppActivateDidFinish object:nil];
 }
 
-static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
+- (void)appActivatedDidFinish:(NSNotification *)notice;
+{
+    NSDictionary* resultDic = [notice object];
+    NSLog(@"%@", resultDic);
+    NSNumber *result = [resultDic objectForKey:@"result"];
+    if ([result boolValue]) {
+        NSNumber *awardAmount = [resultDic objectForKey:@"awardAmount"];
+        NSString *identifier = [resultDic objectForKey:@"identifier"];
+        NSLog(@"app identifier = %@", identifier);
+        
+        extern int g_currentMB;
+        g_currentMB += [awardAmount floatValue];
+        [gameListVC updateMBInfo];
+    }
+}
+
+static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
 {
 	switch(orientation)
 	{
-		case UIDeviceOrientationPortrait: return Gfx::VIEW_ROTATE_0;
-		case UIDeviceOrientationLandscapeLeft: return Gfx::VIEW_ROTATE_90;
-		case UIDeviceOrientationLandscapeRight: return Gfx::VIEW_ROTATE_270;
-		case UIDeviceOrientationPortraitUpsideDown: return Gfx::VIEW_ROTATE_180;
+		case UIInterfaceOrientationPortrait: return Gfx::VIEW_ROTATE_0;
+		case UIInterfaceOrientationLandscapeLeft: return Gfx::VIEW_ROTATE_90;
+		case UIInterfaceOrientationLandscapeRight: return Gfx::VIEW_ROTATE_270;
+		case UIInterfaceOrientationPortraitUpsideDown: return Gfx::VIEW_ROTATE_180;
 		default : return 255; // TODO: handle Face-up/down
 	}
 }
@@ -111,12 +128,7 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
         [controlView changeUI:UIInterfaceOrientationLandscapeLeft];
     }
     
-    uint o = iOSOrientationToGfx([[UIDevice currentDevice] orientation]);
-	if(o == 255)
-		return;
-	if(o == Gfx::VIEW_ROTATE_180 && !isPad())
-		return; // ignore upside-down orientation unless using iPad
-	logMsg("new orientation %s", Gfx::orientationName(o));
+    uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
 	Gfx::preferedOrientation = o;
 	Gfx::setOrientation(Gfx::preferedOrientation);
 }

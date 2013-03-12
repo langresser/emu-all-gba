@@ -19,7 +19,7 @@
 #include <string>
 #include "EmuSystem.hh"
 
-extern int g_currentMB ;
+int g_currentMB = 0;
 
 @interface RomData : NSObject
 @property(nonatomic, strong) NSString* displayName;
@@ -150,45 +150,11 @@ extern int g_currentMB ;
     } else {
         m_purchaseList = [[NSMutableArray alloc]initWithArray:array];
     }
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appActivatedDidFinish:) name:kDJAppActivateDidFinish object:nil];
-}
-
-- (UIViewController *)viewControllerForPresentingModalView{
-    return self;
-}
-
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
-
-
-- (NSUInteger)supportedInterfaceOrientations
-{
-    return UIInterfaceOrientationMaskAll;
-}
-
-- (BOOL)shouldAutorotate
-{
-    return YES;
-}
-
--(void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
-}
-
--(void)viewDidDisappear:(BOOL)animated
-{
-    [super viewDidDisappear:animated];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    return (YES);
+    return UIInterfaceOrientationIsLandscape(interfaceOrientation);
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -301,7 +267,6 @@ extern int g_currentMB ;
         UILabel* intro = [[UILabel alloc]initWithFrame:rectIntro];
         intro.backgroundColor = [UIColor clearColor];
         intro.font = [UIFont systemFontOfSize:fontSize - 2];
-//        intro.textColor = [UIColor grayColor];
         intro.numberOfLines = 0;
         intro.tag = 302;
         
@@ -392,21 +357,6 @@ extern int g_currentMB ;
 {
     // Return NO if you do not want the specified item to be editable.
     return NO;
-}
-
-- (void)appActivatedDidFinish:(NSNotification *)notice;
-{
-    NSDictionary* resultDic = [notice object];
-    NSLog(@"%@", resultDic);
-    NSNumber *result = [resultDic objectForKey:@"result"];
-    if ([result boolValue]) {
-        NSNumber *awardAmount = [resultDic objectForKey:@"awardAmount"];
-        NSString *identifier = [resultDic objectForKey:@"identifier"];
-        NSLog(@"app identifier = %@", identifier);
-        g_currentMB += [awardAmount floatValue];
-        
-        [self updateMBInfo];
-    }
 }
 
 -(BOOL)isRomPurchase:(NSIndexPath*)indexPath notify:(BOOL)notify

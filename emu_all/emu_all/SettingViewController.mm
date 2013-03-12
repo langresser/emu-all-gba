@@ -17,7 +17,6 @@
 #define kTagSound 102
 #define kTagFrameSkip 103
 
-int g_currentMB = 0;
 int g_currentSlot = 1;
 NSString* g_currentRom = nil;
 
@@ -167,10 +166,6 @@ NSString* g_currentRom = nil;
 -(void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-
-    g_currentMB = [[NSUserDefaults standardUserDefaults]integerForKey:@"MB"];
-    [m_tableView reloadData];
-    
     needRestart = NO;
 }
 

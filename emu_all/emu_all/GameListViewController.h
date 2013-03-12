@@ -27,4 +27,5 @@
 }
 
 -(void)restartGame;
+-(void)updateMBInfo;
 @end
