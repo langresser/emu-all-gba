@@ -19,11 +19,9 @@
 #include <audio/Audio.hh>
 
 EmuSystem::State EmuSystem::state = EmuSystem::State::OFF;
-FsSys::cPath EmuSystem::gamePath = "";
 FsSys::cPath EmuSystem::fullGamePath = "";
 FsSys::cPath EmuSystem::savePath_ = "";
 char EmuSystem::gameName[256] = "";
-char EmuSystem::fullGameName[256] = "";
 TimeSys EmuSystem::startTime;
 int EmuSystem::emuFrameNow;
 int EmuSystem::saveStateSlot = 0;
@@ -136,36 +134,17 @@ int EmuSystem::setupFrameSkip(uint optionVal)
 
 void EmuSystem::setupGamePaths(const char *filePath, bool userrom)
 {
-	{
-        if (userrom) {
-            snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::documentsPath(), filePath);
-            
-        } else {
-            snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::applicationPath(), filePath);
-        }
+    if (userrom) {
+        snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::documentsPath(), filePath);
         
-		// find the realpath the dirname portion separately in case the file is a symlink
-		FsSys::cPath dirNameTemp;
-		string_copy(dirNameTemp, filePath);
-		strcpy(gamePath, dirname(dirNameTemp));
-		char realPath[PATH_MAX];
-		if(!realpath(gamePath, realPath))
-		{
-			gamePath[0] = 0;
-			logErr("error in realpath()");
-			return;
-		}
-		strcpy(gamePath, realPath); // destination is always large enough
-		logMsg("set game directory: %s", gamePath);
-	}
+    } else {
+        snprintf(fullGamePath, sizeof(fullGamePath), "%s/%s", Base::applicationPath(), filePath);
+    }
 
 	{
 		FsSys::cPath baseNameTemp;
 		string_copy(baseNameTemp, filePath);
 		string_copy(gameName, basename(baseNameTemp));
-
-		string_printf(fullGamePath, "%s/%s", gamePath, gameName);
-		logMsg("set full game path: %s", fullGamePath);
 
 		// If gameName has an extension, truncate it
 		auto dotPos = strrchr(gameName, '.');

@@ -528,7 +528,7 @@ extern void startGameFromMenu();
         g_isUserRom = isUserRom;
     } else {
         // 默认打开
-        if(EmuSystem::loadGame([romPath UTF8String]))
+        if(EmuSystem::loadGame([romPath UTF8String], false))
         {
             startGameFromMenu();
         }

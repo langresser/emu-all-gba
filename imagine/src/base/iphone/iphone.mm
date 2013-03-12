@@ -442,7 +442,7 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
     
     [self.window makeKeyAndVisible];
     
-//    [[MDGameViewController sharedInstance] showGameList];
+    [[MDGameViewController sharedInstance] showGameList];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];

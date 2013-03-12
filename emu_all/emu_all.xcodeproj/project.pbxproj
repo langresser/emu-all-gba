@@ -2795,7 +2795,7 @@
 					"libs/DianJinFramework/**",
 				);
 				INFOPLIST_FILE = "emu_all/emu_all-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/libs\"",
@@ -2837,7 +2837,7 @@
 					"libs/DianJinFramework/**",
 				);
 				INFOPLIST_FILE = "emu_all/emu_all-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/libs\"",
