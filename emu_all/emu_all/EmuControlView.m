@@ -89,6 +89,8 @@ extern void sound_exit();
 extern void init_sound();
 
 @implementation EmuControllerView
+@synthesize emuWindow;
+
 -(id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
@@ -142,9 +144,8 @@ extern void init_sound();
         imageBack.multipleTouchEnabled = NO;
         imageBack.clearsContextBeforeDrawing = NO;
         [self addSubview:imageBack];
-//        
-//        screenView = [[ScreenView alloc]initWithFrame:frame];
-//        [self addSubview:screenView];
+        
+        [self addSubview:emuWindow];
         
         dpadView = [[UIImageView alloc]initWithFrame:frame];
         [self addSubview:dpadView];
@@ -317,7 +318,7 @@ extern void init_sound();
        r.size.height = tmp_height;
    
    }
-//    screenView.frame = r;
+    emuWindow.frame = r;
     
     //DPAD---
     [self buildDPadView];
@@ -384,7 +385,7 @@ extern void init_sound();
        r.size.height = tmp_height;
    }
     
-//    screenView.frame = r;
+    emuWindow.frame = r;
 
     [self buildDPadView];
     dpadView.alpha = 0.5;
@@ -646,7 +647,7 @@ extern void init_sound();
 			}
 			else if (MyCGRectContainsPoint(LPad2, point))
 			{
-//                [emulatorViewController pauseMenu];
+                [[NSNotificationCenter defaultCenter]postNotificationName:@"showsetting" object:nil];
 			}
 			
 			if(oldtouches[i] != newtouches[i])

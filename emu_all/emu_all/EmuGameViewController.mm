@@ -11,23 +11,12 @@
 #include "EmuSystem.hh"
 #import "UIDevice+Util.h"
 
-MDGameViewController* g_delegate = nil;
-
 @implementation MDGameViewController
 @synthesize settingVC, popoverVC;
 @synthesize gameListVC;
-
-+(MDGameViewController*)sharedInstance
-{
-    if (g_delegate == nil) {
-        g_delegate = [[MDGameViewController alloc]init];
-    }   
-    
-    return g_delegate;
-}
-
 -(void)showSettingPopup
 {
+//    EmuSystem::pause();
     if (isPad()) {
         if (popoverVC == nil) {
             settingVC = [[SettingViewController alloc]initWithNibName:nil bundle:nil];
@@ -50,6 +39,7 @@ MDGameViewController* g_delegate = nil;
                 rect = CGRectMake(750, 60, 10, 10);
                 break;
         }
+
         [popoverVC presentPopoverFromRect:rect inView:self.view permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
     } else {
         if (settingVC == nil) {
@@ -60,18 +50,94 @@ MDGameViewController* g_delegate = nil;
     }
 }
 
+-(void)loadView
+{
+    CGRect rect = [[UIScreen mainScreen] bounds];
+    UIView* view = [[UIView alloc]initWithFrame:rect];
+    self.view = view;
+    
+    glView = [[EAGLView alloc]initWithFrame:rect];
+    controlView = [[EmuControllerView alloc]initWithFrame:rect];
+    controlView.emuWindow = glView;
+    
+    [self.view addSubview:controlView];
+}
+
+-(void)viewDidLoad
+{
+    [super viewDidLoad];
+        
+    currentOrientation = UIInterfaceOrientationLandscapeLeft;
+    CGSize size = [UIScreen mainScreen].bounds.size;
+    int width = size.width > size.height ? size.width : size.height;
+    int height = size.width > size.height ? size.height : size.width;
+    controlView.frame = CGRectMake(0, 0, width, height);
+    [controlView changeUI:currentOrientation];
+    
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(showSettingPopup) name:@"showsetting" object:nil];
+}
+
+static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
+{
+	switch(orientation)
+	{
+		case UIDeviceOrientationPortrait: return Gfx::VIEW_ROTATE_0;
+		case UIDeviceOrientationLandscapeLeft: return Gfx::VIEW_ROTATE_90;
+		case UIDeviceOrientationLandscapeRight: return Gfx::VIEW_ROTATE_270;
+		case UIDeviceOrientationPortraitUpsideDown: return Gfx::VIEW_ROTATE_180;
+		default : return 255; // TODO: handle Face-up/down
+	}
+}
+
+-(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+    
+    if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft) {
+        currentOrientation = UIInterfaceOrientationLandscapeRight;
+        
+        CGSize size = [UIScreen mainScreen].bounds.size;
+        int width = size.width > size.height ? size.width : size.height;
+        int height = size.width > size.height ? size.height : size.width;
+        controlView.frame = CGRectMake(0, 0, width, height);
+        [controlView changeUI:UIInterfaceOrientationLandscapeRight];
+    } else if (toInterfaceOrientation == UIInterfaceOrientationLandscapeRight) {
+        currentOrientation = UIInterfaceOrientationLandscapeLeft;
+        
+        CGSize size = [UIScreen mainScreen].bounds.size;
+        int width = size.width > size.height ? size.width : size.height;
+        int height = size.width > size.height ? size.height : size.width;
+        controlView.frame = CGRectMake(0, 0, width, height);
+        [controlView changeUI:UIInterfaceOrientationLandscapeLeft];
+    }
+    
+    uint o = iOSOrientationToGfx([[UIDevice currentDevice] orientation]);
+	if(o == 255)
+		return;
+	if(o == Gfx::VIEW_ROTATE_180 && !isPad())
+		return; // ignore upside-down orientation unless using iPad
+	logMsg("new orientation %s", Gfx::orientationName(o));
+	Gfx::preferedOrientation = o;
+	Gfx::setOrientation(Gfx::preferedOrientation);
+}
+
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return interfaceOrientation == UIInterfaceOrientationPortrait;
+    return UIInterfaceOrientationIsLandscape(interfaceOrientation);
 }
 
 - (BOOL)shouldAutorotate
 {
-    return NO;
+    return YES;
 }
 
 - (NSUInteger)supportedInterfaceOrientations
 {
-    return UIInterfaceOrientationMaskAll;
+    return UIInterfaceOrientationMaskLandscape;
+}
+
+-(void)showSetting:(NSNotification*)notify
+{
+    [self showSettingPopup];
 }
 
 -(void)showGameList
@@ -85,14 +151,7 @@ MDGameViewController* g_delegate = nil;
 
 - (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController
 {
-    EmuSystem::start();
-    Base::displayNeedsUpdate();
+//    EmuSystem::start();
+//    Base::displayNeedsUpdate();
 }
 @end
-
-
-void showSetting()
-{
-    EmuSystem::pause();
-    [[MDGameViewController sharedInstance] showSettingPopup];
-}

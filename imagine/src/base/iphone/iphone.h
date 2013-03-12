@@ -6,6 +6,7 @@
 #include <config.h>
 #import "GameListViewController.h"
 #import "SettingViewController.h"
+#import "EmuGameViewController.h"
 
 @interface MainApp : NSObject <UIApplicationDelegate, UIPopoverControllerDelegate>
 {
@@ -13,8 +14,10 @@
     GameListViewController* gameListVC;
     SettingViewController* settingVC;
     UIPopoverController * popoverVC;
-    
+
     UIWindow *window;
+    
+    MDGameViewController* emuGameVC;
 }
 
 @property (nonatomic, strong) UIWindow *window;

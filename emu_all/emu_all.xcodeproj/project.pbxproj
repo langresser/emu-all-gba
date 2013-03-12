@@ -996,9 +996,9 @@
 		17DB12E516E659A800B8D346 /* emu_all */ = {
 			isa = PBXGroup;
 			children = (
+				17DB1DAF16ECDD5900B8D346 /* util */,
 				17DB1E3716EE32AF00B8D346 /* EmuGameViewController.h */,
 				17DB1E3816EE32AF00B8D346 /* EmuGameViewController.mm */,
-				17DB1DAF16ECDD5900B8D346 /* util */,
 				17DB155A16E65A9E00B8D346 /* iphone.h */,
 				17DB155916E65A9E00B8D346 /* iphone.mm */,
 				17DB1DA316ECDCF800B8D346 /* DView.h */,

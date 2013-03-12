@@ -117,16 +117,6 @@ uint appState = APP_RUNNING;
 
 }
 
-// A class extension to declare private methods
-@interface EAGLView ()
-
-@property (nonatomic, retain) EAGLContext *context;
-
-- (BOOL) createFramebuffer;
-- (void) destroyFramebuffer;
-
-@end
-
 @implementation EAGLView
 
 @synthesize context;
@@ -427,22 +417,17 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	currWin = mainWin;
 	
 	doOrExit(onInit(0, nullptr)); // TODO: args
-	// Create the OpenGL ES view and add it to the Window
-	glView = [[EAGLView alloc] initWithFrame:rect];
-	#ifdef CONFIG_INPUT_ICADE
-		iCade.init(glView);
-	#endif
+    
+    window = [[UIWindow alloc]initWithFrame:rect];
+    emuGameVC = [[MDGameViewController alloc]initWithNibName:nil bundle:nil];
+    window.rootViewController = emuGameVC;
+    [self.window makeKeyAndVisible];
+    
 	Base::engineInit();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	Base::setAutoOrientation(1);
     
-    window = [[UIWindow alloc]initWithFrame:rect];
-    [[MDGameViewController sharedInstance] setView:glView];
-    window.rootViewController = [MDGameViewController sharedInstance];
-    
-    [self.window makeKeyAndVisible];
-    
-    [[MDGameViewController sharedInstance] showGameList];
+//    [emuGameVC showGameList];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];
@@ -450,19 +435,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
     [UMFeedback checkWithAppkey:kUMengAppKey];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onRecNewMsg:) name:UMFBCheckFinishedNotification object:nil];
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification object:nil];
-}
-
-- (void)orientationChanged:(NSNotification *)notification
-{
-	uint o = iOSOrientationToGfx([[UIDevice currentDevice] orientation]);
-	if(o == 255)
-		return;
-	if(o == Gfx::VIEW_ROTATE_180 && !isPad())
-		return; // ignore upside-down orientation unless using iPad
-	logMsg("new orientation %s", Gfx::orientationName(o));
-	Gfx::preferedOrientation = o;
-	Gfx::setOrientation(Gfx::preferedOrientation);
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application

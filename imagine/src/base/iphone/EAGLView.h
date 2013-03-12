@@ -11,9 +11,6 @@ The view content is basically an EAGL surface you render your OpenGL scene into.
 Note that setting the view non-opaque will only work if the EAGL surface has an alpha channel.
 */
 @interface EAGLView : UIView
-#if defined(CONFIG_BASE_IOS_KEY_INPUT) || defined(CONFIG_INPUT_ICADE)
-<UIKeyInput>
-#endif
 {
 @private
 	/* The pixel dimensions of the backbuffer */
@@ -28,4 +25,9 @@ Note that setting the view non-opaque will only work if the EAGL surface has an 
 	/* OpenGL name for the depth buffer that is attached to viewFramebuffer, if it exists (0 if it does not exist) */
 	GLuint depthRenderbuffer;
 }
+
+@property (nonatomic, retain) EAGLContext *context;
+
+- (BOOL) createFramebuffer;
+- (void) destroyFramebuffer;
 @end

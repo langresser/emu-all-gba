@@ -58,10 +58,13 @@ enum  { GP2X_UP=0x1,       GP2X_LEFT=0x4,       GP2X_DOWN=0x10,  GP2X_RIGHT=0x40
 
   NSString *nameImgButton_Press[NUM_BUTTONS];
   NSString *nameImgButton_NotPress[NUM_BUTTONS];
+    
+    UIView* emuWindow;
 }
 
 @property (strong, nonatomic) NSMutableSet *sustainedButtons;
 @property (nonatomic) BOOL readyToSustain;
+@property (nonatomic, retain) UIView* emuWindow;
 
 - (void)getControllerCoords:(int)orientation;
 
