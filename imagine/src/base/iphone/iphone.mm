@@ -344,8 +344,6 @@ uint appState = APP_RUNNING;
 @end
 
 @implementation MainApp
-@synthesize window;
-
 static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 {
 	switch(orientation)
@@ -387,12 +385,12 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
     window = [[UIWindow alloc]initWithFrame:rect];
     emuGameVC = [[MDGameViewController alloc]initWithNibName:nil bundle:nil];
     window.rootViewController = emuGameVC;
-    [self.window makeKeyAndVisible];
+    [window makeKeyAndVisible];
     
 	Base::engineInit();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     
-//    [emuGameVC showGameList];
+    [emuGameVC showGameList];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];
@@ -400,6 +398,16 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
     [UMFeedback checkWithAppkey:kUMengAppKey];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onRecNewMsg:) name:UMFBCheckFinishedNotification object:nil];
+}
+
+-(void)showGameList
+{
+    [emuGameVC showGameList];
+}
+
+-(void)showSettingPopup
+{
+    [emuGameVC showSettingPopup];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -660,4 +668,17 @@ int main(int argc, char *argv[])
         int retVal = UIApplicationMain(argc, argv, nil, @"MainApp");
         return retVal;
     }
+}
+
+
+void showGameList()
+{
+    MainApp* app = (MainApp*)[UIApplication sharedApplication].delegate;
+    [app showGameList];
+}
+
+void showSettingPopup()
+{
+    MainApp* app = (MainApp*)[UIApplication sharedApplication].delegate;
+    [app showSettingPopup];
 }

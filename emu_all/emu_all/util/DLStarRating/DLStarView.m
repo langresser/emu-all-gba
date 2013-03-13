@@ -29,7 +29,7 @@
         }
         self.frame = CGRectMake((star.size.width*index), 0, star.size.width, star.size.height+kEdgeInsetBottom);
         [self setStarImage:star highlightedStarImage:highlightedStar];
-		[self setImageEdgeInsets:UIEdgeInsetsMake(0, 0, kEdgeInsetBottom, 0)];
+//		[self setImageEdgeInsets:UIEdgeInsetsMake(0, 0, kEdgeInsetBottom, 0)];
 		[self setBackgroundColor:[UIColor clearColor]];
         if (index == 0) {
    	        [self setAccessibilityLabel:@"1 star"];

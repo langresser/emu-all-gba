@@ -10,15 +10,14 @@
 #import <QuartzCore/QuartzCore.h>
 #import "UIDevice+Util.h"
 #import "UIGlossyButton.h"
+#import "UMFeedback.h"
+#import "iphone.h"
+
 #include "platform_util.h"
+#include "EmuSystem.hh"
+#include "Option.hh"
 
-#define kTagAutoSave  100
-#define kTagSmoothScaling 101
-#define kTagSound 102
-#define kTagFrameSkip 103
-
-int g_currentSlot = 1;
-NSString* g_currentRom = nil;
+int g_rotation = 0;
 
 @implementation SettingViewController
 
@@ -31,27 +30,22 @@ NSString* g_currentRom = nil;
     return self;
 }
 
--(NSString*)saveFilePath:(NSString*)fileName slot:(int)slot
-{
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectoryPath = [paths objectAtIndex:0];
-    NSString* saveName = [[g_currentRom stringByDeletingPathExtension] stringByAppendingFormat:@".%d.svs", g_currentSlot];
-    NSString* savePath = [[documentsDirectoryPath stringByAppendingPathComponent:@"saves"]stringByAppendingPathComponent:saveName];
-    return savePath;
-}
-
 -(void)loadView
 {
-    settingView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 480)];
+    CGRect rect = [UIScreen mainScreen].bounds;
+    int width = rect.size.width > rect.size.height ? rect.size.width : rect.size.height;
+    int height = rect.size.width > rect.size.height ? rect.size.height : rect.size.width;
+
+    settingView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, width, height)];
     settingView.backgroundColor = [UIColor colorWithRed:240.0 / 255 green:248.0 / 255 blue:1.0 alpha:1.0];
-    m_tableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 50, 320, 430) style:UITableViewStyleGrouped];
+    m_tableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 50, width, height - 50) style:UITableViewStyleGrouped];
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
     m_tableView.backgroundColor = [UIColor colorWithRed:240.0 / 255 green:248.0 / 255 blue:1.0 alpha:1.0];
     [m_tableView setBackgroundView:nil];
     [settingView addSubview:m_tableView];
 
-    UIGlossyButton* btnBack = [[UIGlossyButton alloc]initWithFrame:CGRectMake(220, 10, 80, 30)];
+    UIGlossyButton* btnBack = [[UIGlossyButton alloc]initWithFrame:CGRectMake(width - 100, 10, 80, 30)];
     [btnBack setTitle:@"返回游戏" forState:UIControlStateNormal];
     [btnBack addTarget:self action:@selector(onClickBack) forControlEvents:UIControlEventTouchUpInside];
 
@@ -74,117 +68,75 @@ NSString* g_currentRom = nil;
     [btnBackList setGradientType:kUIGlossyButtonGradientTypeLinearSmoothBrightToNormal];
     [settingView addSubview:btnBackList];
     
+    g_rotation = [[NSUserDefaults standardUserDefaults]integerForKey:@"rotation"];
+    
     [self setView:settingView];
-}
-
-- (void)done
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"SettingsChanged" object:nil userInfo:nil];
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.contentSizeForViewInPopover = CGSizeMake(320, 480);
-    
-    static NSString* cellIdent = @"MySellGaoji";
-    CGRect rectS = CGRectMake(200, 10, 100, 50);
-    autosave = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdent];
-    autosave.textLabel.font = [UIFont systemFontOfSize:17.0];
-    autosave.selectionStyle = UITableViewCellSelectionStyleGray;
-    autosave.accessoryType = UITableViewCellAccessoryNone;
-    autosave.textLabel.text = @"使用自动存档";
-    
-    UISwitch* swh1 = [[UISwitch alloc]initWithFrame:rectS];
-    swh1.tag = kTagAutoSave;
-    [swh1 addTarget:self action:@selector(settingChanged:) forControlEvents:UIControlEventValueChanged];
-    [autosave.contentView addSubview:swh1];
-
-    smoothScaling = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdent];
-    smoothScaling.textLabel.font = [UIFont systemFontOfSize:17.0];
-    smoothScaling.selectionStyle = UITableViewCellSelectionStyleGray;
-    smoothScaling.accessoryType = UITableViewCellAccessoryNone;
-    smoothScaling.textLabel.text = @"抗锯齿";
-    
-    UISwitch* swh2 = [[UISwitch alloc]initWithFrame:rectS];
-    swh2.tag = kTagSmoothScaling;
-    [swh2 addTarget:self action:@selector(settingChanged:) forControlEvents:UIControlEventValueChanged];
-    [smoothScaling.contentView addSubview:swh2];
-    
-    enableSound = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdent];
-    enableSound.textLabel.font = [UIFont systemFontOfSize:17.0];
-    enableSound.selectionStyle = UITableViewCellSelectionStyleGray;
-    enableSound.accessoryType = UITableViewCellAccessoryNone;
-    enableSound.textLabel.text = @"开启声音";
-    
-    UISwitch* swh3 = [[UISwitch alloc]initWithFrame:rectS];
-    swh3.tag = kTagSound;
-    [swh3 addTarget:self action:@selector(settingChanged:) forControlEvents:UIControlEventValueChanged];
-    [enableSound.contentView addSubview:swh3];
-}
-
-- (IBAction) settingChanged:(id)sender
-{
-    UISwitch* swh = (UISwitch*)sender;
-	if (swh.tag == kTagAutoSave) {
-        [[NSUserDefaults standardUserDefaults] setBool:[swh isOn] forKey:USER_DEFAULT_KEY_AUTOSAVE];
-        [self done];
-    } else if (swh.tag == kTagSmoothScaling) {
-        [[NSUserDefaults standardUserDefaults] setBool:[swh isOn] forKey:USER_DEFAULT_KEY_SMOOTH_SCALING];
-        [self done];
-    } else if (swh.tag == kTagSound) {
-        [[NSUserDefaults standardUserDefaults] setBool:[swh isOn] forKey:USER_DEFAULT_KEY_SOUND];
-        needRestart = YES;
-        [self done];
-    }
-    
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+    return UIInterfaceOrientationIsLandscape(interfaceOrientation);
 }
 
+-(void)adjustView:(UIInterfaceOrientation)toInterfaceOrientation
+{
+    float width = self.view.bounds.size.width > self.view.bounds.size.height ? self.view.bounds.size.width : self.view.bounds.size.height;
+    float height = self.view.bounds.size.width > self.view.bounds.size.height ? self.view.bounds.size.height : self.view.bounds.size.width;
+    
+    if (UIInterfaceOrientationIsLandscape(toInterfaceOrientation)) {
+        settingView.frame = CGRectMake(0, 0, width, height);
+        m_tableView.frame = CGRectMake(0, 50, width, height - 50);
+    } else {
+        settingView.frame = CGRectMake(0, 0, height, width);
+        m_tableView.frame = CGRectMake(0, 50, height, width - 50);
+    }
+}
+
+-(BOOL)shouldAutorotate
+{
+    return NO;
+}
 
 - (NSUInteger)supportedInterfaceOrientations
 {
     return UIInterfaceOrientationMaskAll;
 }
 
-- (BOOL)shouldAutorotate
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
-    return YES;
+    [self adjustView:toInterfaceOrientation];
+    [m_tableView reloadData];
 }
 
 -(void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    needRestart = NO;
-}
-
--(void)viewDidDisappear:(BOOL)animated
-{
-    [super viewDidDisappear:animated];
+    [m_tableView reloadData];
 }
 
 -(void)onClickBackList
 {
+    EmuSystem::saveAutoState();
+    EmuSystem::saveBackupMem();
+    
+    [self dismissModalViewControllerAnimated:NO];
+    showGameList();
 }
 
 -(void)onClickBack
 {
+    [self dismissModalViewControllerAnimated:YES];
+    EmuSystem::start();
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 3;
+    return 2;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
@@ -192,8 +144,6 @@ NSString* g_currentRom = nil;
     if (section == 0) {
         return @"系统设置";
     } else if (section == 1) {
-        return @"高级设置";
-    } else if (section == 2) {
         return @"其他";
     }
     return @"";
@@ -207,10 +157,8 @@ NSString* g_currentRom = nil;
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     if (section == 0) {
-        return 4;
+        return 5;
     } else if (section == 1) {
-        return 3;
-    } else if (section == 2) {
         return 4;
     }
     return 0;
@@ -247,7 +195,7 @@ NSString* g_currentRom = nil;
             cell.peekInset = UIEdgeInsetsMake(0, 35, 0, 35);
             
             [cell reloadData];            
-            [cell selectItemAtIndex:g_currentSlot animated:NO];
+            [cell selectItemAtIndex:EmuSystem::saveStateSlot + 1 animated:NO];
             
             return cell;
         } else {
@@ -260,13 +208,19 @@ NSString* g_currentRom = nil;
                 cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
             }
             
+            FsSys::cPath saveStr;
+            if (EmuSystem::saveStateSlot == -1) {
+                snprintf(saveStr, 256, "%s/save/%s.0%c.gp", Base::documentsPath(), EmuSystem::gameName, 'A');
+            } else {
+                snprintf(saveStr, 256, "%s/save/%s.0%c.gp", Base::documentsPath(), EmuSystem::gameName, '0' + EmuSystem::saveStateSlot);
+            }
+            
             NSString* saveStatus;
             
             NSFileManager* fm = [NSFileManager defaultManager];
-            NSString* savePath = [self saveFilePath:g_currentRom slot:g_currentSlot];
             
-            if ([fm fileExistsAtPath:savePath]) {
-                NSDictionary* attr = [fm attributesOfItemAtPath:savePath error:nil];
+            if ([fm fileExistsAtPath:[NSString stringWithUTF8String:saveStr]]) {
+                NSDictionary* attr = [fm attributesOfItemAtPath:[NSString stringWithUTF8String:saveStr] error:nil];
                 NSDate* time = [attr objectForKey:NSFileModificationDate];
                 
                 static NSDateFormatter *dateFormatter = nil;
@@ -278,17 +232,17 @@ NSString* g_currentRom = nil;
                 
                 NSString* timestamp = [dateFormatter stringFromDate:time];
 
-                if (g_currentSlot == 0) {
+                if (EmuSystem::saveStateSlot == -1) {
                     saveStatus = [NSString stringWithFormat:@"自动存档: %@", timestamp];
                 } else {
-                    saveStatus = [NSString stringWithFormat:@"%d 存档位: %@", g_currentSlot - 1, timestamp];
+                    saveStatus = [NSString stringWithFormat:@"%d 存档位: %@", EmuSystem::saveStateSlot, timestamp];
                 }
                 
             } else {
-                if (g_currentSlot == 0) {
+                if (EmuSystem::saveStateSlot == -1) {
                     saveStatus = @"自动存档: 空白";
                 } else {
-                    saveStatus = [NSString stringWithFormat:@"%d 存档位: 空白", g_currentSlot - 1];
+                    saveStatus = [NSString stringWithFormat:@"%d 存档位: 空白", EmuSystem::saveStateSlot];
                 }
             }
             
@@ -296,46 +250,28 @@ NSString* g_currentRom = nil;
                 case 0:
                     cell.textLabel.text = @"读档";
                     cell.detailTextLabel.text = saveStatus;
+                    cell.accessoryType = UITableViewCellAccessoryNone;
                     break;
                 case 1:
                     cell.textLabel.text = @"存档";
                     cell.detailTextLabel.text = saveStatus;
+                    cell.accessoryType = UITableViewCellAccessoryNone;
                     break;
-                case 3:
+                case 4:
                     cell.textLabel.text = @"重置游戏";
                     cell.detailTextLabel.text = @"";
+                    cell.accessoryType = UITableViewCellAccessoryNone;
+                    break;
+                case 5:
+                    cell.textLabel.text = @"高级设置";
+                    cell.detailTextLabel.text = @"";
+                    cell.accessoryType = UITableViewCellAccessoryNone;
                     break;
                 default:
                     break;
             }
         }
     } else if (indexPath.section == 1) {
-        switch (indexPath.row) {
-            case 0:
-            {
-                UISwitch* swh = (UISwitch*)[autosave.contentView viewWithTag:kTagAutoSave];
-                swh.on = [[NSUserDefaults standardUserDefaults]boolForKey:USER_DEFAULT_KEY_AUTOSAVE];
-                return autosave;
-            }
-                break;
-            case 1:
-            {
-                UISwitch* swh = (UISwitch*)[smoothScaling.contentView viewWithTag:kTagSmoothScaling];
-                swh.on = [[NSUserDefaults standardUserDefaults]boolForKey:USER_DEFAULT_KEY_SMOOTH_SCALING];
-                return smoothScaling;
-            }
-                break;
-            case 2:
-            {
-                UISwitch* swh = (UISwitch*)[enableSound.contentView viewWithTag:kTagSound];
-                swh.on = [[NSUserDefaults standardUserDefaults]boolForKey:USER_DEFAULT_KEY_SOUND];
-                return enableSound;
-            }
-                break;
-            default:
-                break;
-        }
-    } else if (indexPath.section == 2) {
         static NSString* cellIdent = @"MyCellGongl";
         cell = [tableView dequeueReusableCellWithIdentifier:cellIdent];
         if (!cell) {
@@ -381,31 +317,32 @@ NSString* g_currentRom = nil;
 {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    NSString* savePath = [self saveFilePath:g_currentRom slot:g_currentSlot];
-    char szTemp[1024] = {0};
-    strlcpy(szTemp, [savePath UTF8String], sizeof(szTemp));
-
     if (indexPath.section == 0) {
         switch (indexPath.row) {
             case 0:
                 [self onClickBack];
-//                load_game_state(szTemp);
+                EmuSystem::loadState();
                 break;
             case 1:
                 [self onClickBack];
-//                save_game_state(szTemp);
+                EmuSystem::saveState();
                 break;
-            case 3:
+            case 4:
             {
                 UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"" message:@"是否重置游戏?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
                 alert.tag = 100;
                 [alert show];
             }
                 break;
+            case 5:
+                [self onClickBack];
+                extern void restoreMenuFromGame();
+                restoreMenuFromGame();
+                break;
             default:
                 break;
         }
-    } else if (indexPath.section == 2) {
+    } else if (indexPath.section == 1) {
         switch (indexPath.row) {
             case 0:
                 [UMFeedback showFeedback:self withAppkey:kUMengAppKey];
@@ -427,11 +364,14 @@ NSString* g_currentRom = nil;
 }
 
 #pragma mark - CPPickerViewCell DataSource
+
 - (NSInteger)numberOfItemsInPickerViewAtIndexPath:(NSIndexPath *)pickerPath {
     if (pickerPath.row == 2) {
         return 11;
+    } else if (pickerPath.row == 3) {
+        return 2;
     }
-
+    
     return 0;
 }
 
@@ -442,8 +382,15 @@ NSString* g_currentRom = nil;
         } else {
             return [NSString stringWithFormat:@"%d", item - 1];
         }
+    } else if (pickerPath.row == 3) {
+        if (item == 0) {
+            return @"3按钮";
+        } else {
+            return @"6按钮";
+        }
     }
-
+    
+    
     return nil;
 }
 
@@ -452,7 +399,8 @@ NSString* g_currentRom = nil;
 - (void)pickerViewAtIndexPath:(NSIndexPath *)pickerPath didSelectItem:(NSInteger)item {
     
     if (pickerPath.row == 2) {
-        g_currentSlot = item;
+        EmuSystem::saveStateSlot = (item - 1);
+    } else if (pickerPath.row == 3) {
     }
 
     [m_tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
@@ -464,9 +412,14 @@ NSString* g_currentRom = nil;
     if (alertView.tag == 100) {
         if (buttonIndex == 1) {
             [self onClickBack];
-//            SIReset();
+            EmuSystem::resetGame();
+        }
+    } else {
+        if (buttonIndex == 1) {
+            [[DianJinOfferPlatform defaultPlatform]showOfferWall: self delegate:self];
         }
     }
+    
 }
 
 @end

@@ -92,7 +92,6 @@ int g_currentMB = 0;
     transitionParam.animationSubType = kDJTransitionFromTop;
     transitionParam.duration = 1.0;
     [_banner setupTransition:transitionParam];
-    [_banner startWithTimeInterval:20 delegate:self];
     _banner.center = CGPointMake(rect.size.width / 2, 25);
     [self.view addSubview:_banner];
     [_banner startWithTimeInterval:30 delegate:self];
@@ -242,7 +241,7 @@ int g_currentMB = 0;
     } else {
         if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation)) {
             rectImage = CGRectMake(2, 10, 57, 57);
-            rectName = CGRectMake(60, 5, 110, 20);
+            rectName = CGRectMake(60, 5, 150, 20);
             rectIntro = CGRectMake(60, 30, 400, 50);
             rectRate = CGRectMake(360, 5, 85, 15);
             rectLock = CGRectMake(440, 5, 16, 16);
@@ -470,7 +469,7 @@ extern void startGameFromMenu();
         return;
     }
     
-    [self dismissModalViewControllerAnimated:NO];
+    [self dismissModalViewControllerAnimated:YES];
     
     extern int openglViewIsInit;
     if (openglViewIsInit == 0) {

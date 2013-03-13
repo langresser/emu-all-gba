@@ -356,7 +356,7 @@ void startGameFromMenu()
 	}
 }
 
-static void restoreMenuFromGame()
+void restoreMenuFromGame()
 {
 	menuViewIsActive = 1;
 	Base::setIdleDisplayPowerSave(
@@ -364,12 +364,12 @@ static void restoreMenuFromGame()
 		Bluetooth::devsConnected() ? 0 :
 	#endif
 		(int)optionIdleDisplayPowerSave);
-	//Base::setLowProfileNavigation(0);
+
 	setupStatusBarInMenu();
 	EmuSystem::pause();
 	if(!optionFrameSkip.isConst)
 		Gfx::setVideoInterval(1);
-	//logMsg("setting valid orientations");
+
 	if(!Gfx::setValidOrientations(optionMenuOrientation, 1))
 		Gfx::onViewChange();
 	Input::setKeyRepeat(1);
@@ -558,10 +558,14 @@ void EmuView::inputEvent(const Input::Event &e)
 		if(e.state == Input::PUSHED && optionTouchCtrlMenuPos != NULL2DO && emuMenuB.overlaps(e.x, e.y))
 		{
 			viewStack.top()->clearSelection();
-			restoreMenuFromGame();
+			//restoreMenuFromGame();
+            EmuSystem::pause();
+            extern void showSettingPopup();
+            showSettingPopup();
 			return;
 		}
-		else if(e.state == Input::PUSHED && optionTouchCtrlFFPos != NULL2DO && emuFFB.overlaps(e.x, e.y))
+		else
+        if(e.state == Input::PUSHED && optionTouchCtrlFFPos != NULL2DO && emuFFB.overlaps(e.x, e.y))
 		{
 			toggle(ffGuiTouch);
 		}

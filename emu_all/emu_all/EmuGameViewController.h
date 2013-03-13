@@ -12,25 +12,20 @@
 #import "EmuControlView.h"
 #import "EAGLView.h"
 
-@interface MDGameViewController : UIViewController<UIPopoverControllerDelegate>
+@interface MDGameViewController : UIViewController
 {
     GameListViewController* gameListVC;
     SettingViewController* settingVC;
-    UIPopoverController * popoverVC;
     
 #ifdef USE_IOS_JOYSTICK
     EmuControllerView* controlView;
+    int currentOrientation;
 #endif
     
     EAGLView* glView;
-    
-    int currentOrientation;
 }
 
-@property(nonatomic, strong) GameListViewController* gameListVC;
-@property(nonatomic, strong) SettingViewController* settingVC;
-@property(nonatomic, strong) UIPopoverController * popoverVC;
-
 -(void)showGameList;
+-(void)showSettingPopup;
 @end
 

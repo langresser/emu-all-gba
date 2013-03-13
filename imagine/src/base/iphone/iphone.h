@@ -20,9 +20,11 @@
     MDGameViewController* emuGameVC;
 }
 
-@property (nonatomic, strong) UIWindow *window;
-
--(void)showSettingPopup:(BOOL)show;
+-(void)showSettingPopup;
 -(void)showGameList;
 
 @end
+
+
+void showSettingPopup();
+void showGameList();

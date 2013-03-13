@@ -12,55 +12,13 @@
 #import "UIDevice+Util.h"
 
 @implementation MDGameViewController
-@synthesize settingVC, popoverVC;
-@synthesize gameListVC;
--(void)showSettingPopup
-{
-//    EmuSystem::pause();
-    if (isPad()) {
-        if (popoverVC == nil) {
-            settingVC = [[SettingViewController alloc]initWithNibName:nil bundle:nil];
-            popoverVC = [[UIPopoverController alloc] initWithContentViewController:settingVC];       
-            popoverVC.delegate = self;
-        }
-
-        CGRect rect;
-        switch (Gfx::preferedOrientation) {
-            case Gfx::VIEW_ROTATE_0:
-                rect = CGRectMake(750, 60, 10, 10);
-                break;
-            case Gfx::VIEW_ROTATE_270:
-                rect = CGRectMake(0, 60, 10, 10);
-                break;
-            case Gfx::VIEW_ROTATE_90:
-                rect = CGRectMake(750, 960, 10, 10);
-                break;
-            default:
-                rect = CGRectMake(750, 60, 10, 10);
-                break;
-        }
-
-        [popoverVC presentPopoverFromRect:rect inView:self.view permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
-    } else {
-        if (settingVC == nil) {
-            settingVC = [[SettingViewController alloc]initWithNibName:nil bundle:nil];
-        }
-
-        [self presentModalViewController:settingVC animated:YES];
-    }
-}
-
 -(void)loadView
 {
     CGRect rect = [[UIScreen mainScreen] bounds];
-    
 #ifdef USE_IOS_JOYSTICK
     UIView* view = [[UIView alloc]initWithFrame:rect];
     self.view = view;
-    
-    int width = rect.size.width > rect.size.height ? rect.size.width : rect.size.height;
-    int height = rect.size.width > rect.size.height ? rect.size.height : rect.size.width;
-   
+
     controlView = [[EmuControllerView alloc]initWithFrame:rect];
     [controlView addEmuWindow:glView];
 #endif
@@ -162,6 +120,15 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
     return UIInterfaceOrientationMaskAll;
 }
 
+-(void)showSettingPopup
+{
+    if (settingVC == nil) {
+        settingVC = [[SettingViewController alloc]initWithNibName:nil bundle:nil];
+    }
+    
+    [self presentModalViewController:settingVC animated:YES];
+}
+
 -(void)showGameList
 {
     if (gameListVC == nil) {
@@ -169,11 +136,5 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
     }
     
     [self presentModalViewController:gameListVC animated:NO];
-}
-
-- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController
-{
-//    EmuSystem::start();
-//    Base::displayNeedsUpdate();
 }
 @end
