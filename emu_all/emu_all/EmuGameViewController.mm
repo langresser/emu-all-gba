@@ -65,9 +65,13 @@
     [controlView addEmuWindow:glView];
 #endif
     
+    UIView* view = [[UIView alloc]initWithFrame:rect];
+    self.view = view;
+    
     glView = [[EAGLView alloc]initWithFrame:rect];
-//    [self.view addSubview:controlView];
-    self.view  = glView;
+    glView.transform = CGAffineTransformConcat(glView.transform, CGAffineTransformMakeRotation(- 3.1415 / 2));
+    glView.transform = CGAffineTransformConcat(glView.transform, CGAffineTransformMakeTranslation((rect.size.height - rect.size.width) / 2, (rect.size.width - rect.size.height) / 2));
+    [self.view addSubview:glView];
 }
 
 -(void)viewDidLoad
@@ -139,8 +143,7 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
     }
 #endif
     
-//    uint o = iOSOrientationToGfx([UIDevice currentDevice].orientation);
-    //uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
+//    uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
 //	Gfx::preferedOrientation = o;
 //	Gfx::setOrientation(Gfx::preferedOrientation);
 }
@@ -151,18 +154,12 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
 
 - (BOOL)shouldAutorotate
 {
-    return NO;
+    return YES;
 }
 
 - (NSUInteger)supportedInterfaceOrientations
 {
-    //return UIInterfaceOrientationMaskAll;
-    return UIInterfaceOrientationMaskLandscape;
-}
-
--(void)showSetting:(NSNotification*)notify
-{
-    [self showSettingPopup];
+    return UIInterfaceOrientationMaskAll;
 }
 
 -(void)showGameList

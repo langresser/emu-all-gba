@@ -44,7 +44,7 @@ uint gfx_frameTime = 0, gfx_frameTimeRel = 0;
 #include <gfx/common/space.h>
 
 GLStateCache glState;
-static int animateOrientationChange = !Config::envIsWebOS3;
+static int animateOrientationChange = 0;//!Config::envIsWebOS3;
 TimedMotion<GC> projAngleM;
 
 #include "settings.h"
