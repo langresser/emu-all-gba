@@ -85,7 +85,7 @@ static void checkXRun(uint queued)
 {
 	if(unlikely(isPlaying && queued == 0))
 	{
-		logMsg("xrun, no buffers queued");
+//		logMsg("xrun, no buffers queued");
 		AudioQueuePause(queue);
 		isPlaying = 0;
 	}
@@ -188,7 +188,7 @@ static void startPlaybackIfNeeded()
 	// TODO: base off total bytes and only use buffer count when max buffers reached
 	if(unlikely(!isPlaying && buffersQueued >= buffers-1))
 	{
-		logMsg("playback starting with %d buffers", buffersQueued);
+//		logMsg("playback starting with %d buffers", buffersQueued);
 		int err = AudioQueueStart(queue, 0);
 		if(err)
 		{
