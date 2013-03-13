@@ -131,6 +131,7 @@ uint appState = APP_RUNNING;
 -(id)initGLES
 {
 	CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
+//    self.backgroundColor = [UIColor greenColor];
 
 	using namespace Base;
 
@@ -174,7 +175,6 @@ uint appState = APP_RUNNING;
 	return self;
 }
 
-#ifdef CONFIG_BASE_IPHONE_NIB
 // Init from NIB
 - (id)initWithCoder:(NSCoder*)coder
 {
@@ -184,17 +184,14 @@ uint appState = APP_RUNNING;
 	}
 	return self;
 }
-#endif
 
 // Init from code
 -(id)initWithFrame:(CGRect)frame
 {
-	logMsg("entered initWithFrame");
 	if((self = [super initWithFrame:frame]))
 	{
 		self = [self initGLES];
 	}
-	logMsg("exiting initWithFrame");
 	return self;
 }
 
@@ -214,7 +211,6 @@ uint appState = APP_RUNNING;
 
 - (void)layoutSubviews
 {
-	logMsg("in layoutSubviews");
 	[self drawView];
 }
 
@@ -274,8 +270,6 @@ uint appState = APP_RUNNING;
 		[EAGLContext setCurrentContext:nil];
 	}
 }
-
-#ifdef CONFIG_INPUT
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
@@ -348,32 +342,6 @@ uint appState = APP_RUNNING;
 {
 	[self touchesEnded:touches withEvent:event];
 }
-
-#if defined(CONFIG_BASE_IOS_KEY_INPUT) || defined(CONFIG_INPUT_ICADE)
-- (BOOL)canBecomeFirstResponder { return YES; }
-
-- (BOOL)hasText { return NO; }
-
-- (void)insertText:(NSString *)text
-{
-	#ifdef CONFIG_INPUT_ICADE
-	if(Base::iCade.isActive())
-		Base::iCade.insertText(text);
-	#endif
-}
-
-- (void)deleteBackward { }
-
-#ifdef CONFIG_INPUT_ICADE
-- (UIView*)inputView
-{
-	return Base::iCade.dummyInputView;
-}
-#endif
-#endif // defined(CONFIG_BASE_IOS_KEY_INPUT) || defined(CONFIG_INPUT_ICADE)
-
-#endif
-
 @end
 
 @implementation MainApp

@@ -38,8 +38,7 @@ uint setValidOrientations(uint oMask, bool manageAutoOrientation)
 {
 	if(oMask == VIEW_ROTATE_AUTO)
 	{
-//		oMask = VIEW_ROTATE_0 | VIEW_ROTATE_90 | VIEW_ROTATE_180 | VIEW_ROTATE_270;
-		oMask = VIEW_ROTATE_0 | VIEW_ROTATE_180;
+		oMask = VIEW_ROTATE_0 | VIEW_ROTATE_90 | VIEW_ROTATE_180 | VIEW_ROTATE_270;
 	}
 	else
 	{

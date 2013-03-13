@@ -372,7 +372,7 @@ static unsigned long oldtouches[NUM_BUTTONS];
     
     if (emuWindow) {
         emuWindow.frame = r;
-        emuWindow.frame = CGRectMake(0, 0, 320, 420);
+//        emuWindow.frame = CGRectMake(0, 0, 768, 1024);
     }
 
     [self buildDPadView];

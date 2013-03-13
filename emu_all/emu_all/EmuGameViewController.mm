@@ -58,9 +58,10 @@
     
     glView = [[EAGLView alloc]initWithFrame:rect];
     controlView = [[EmuControllerView alloc]initWithFrame:rect];
-    [controlView addEmuWindow:glView];
+//    [controlView addEmuWindow:glView];
     
-    [self.view addSubview:controlView];
+//    [self.view addSubview:controlView];
+    self.view  = glView;
 }
 
 -(void)viewDidLoad
@@ -106,6 +107,19 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
 	}
 }
 
+static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
+{
+	switch(orientation)
+	{
+		case UIDeviceOrientationPortrait: return Gfx::VIEW_ROTATE_0;
+		case UIDeviceOrientationLandscapeLeft: return Gfx::VIEW_ROTATE_90;
+		case UIDeviceOrientationLandscapeRight: return Gfx::VIEW_ROTATE_270;
+		case UIDeviceOrientationPortraitUpsideDown: return Gfx::VIEW_ROTATE_180;
+		default : return 255; // TODO: handle Face-up/down
+	}
+}
+
+
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
     [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
@@ -128,7 +142,8 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
         [controlView changeUI:UIInterfaceOrientationLandscapeLeft];
     }
     
-    uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
+    uint o = iOSOrientationToGfx([UIDevice currentDevice].orientation);
+    //uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
 	Gfx::preferedOrientation = o;
 	Gfx::setOrientation(Gfx::preferedOrientation);
 }
@@ -144,7 +159,8 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
 
 - (NSUInteger)supportedInterfaceOrientations
 {
-    return UIInterfaceOrientationMaskLandscape;
+    return UIInterfaceOrientationMaskAll;
+    //return UIInterfaceOrientationMaskLandscape;
 }
 
 -(void)showSetting:(NSNotification*)notify
