@@ -18,7 +18,9 @@
     SettingViewController* settingVC;
     UIPopoverController * popoverVC;
     
+#ifdef USE_IOS_JOYSTICK
     EmuControllerView* controlView;
+#endif
     
     EAGLView* glView;
     

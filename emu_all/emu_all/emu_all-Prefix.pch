@@ -29,8 +29,10 @@
 #define NO_SYSTEM_PICO
 #define SUPPORT_16BPP_RENDER
 
+//#define USE_IOS_JOYSTICK
 
 #ifdef GBA_SRW
+#define JOYSTICK_GBA
 #define kUMengAppKey @"50a5517a52701506f8000017"
 #define kDianjinAppKey 12932
 #define kDianjinAppSecrect @"b46da6977eaf1861438e8cfd799a4fce"

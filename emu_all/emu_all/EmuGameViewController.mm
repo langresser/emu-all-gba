@@ -53,16 +53,19 @@
 -(void)loadView
 {
     CGRect rect = [[UIScreen mainScreen] bounds];
+    
+#ifdef USE_IOS_JOYSTICK
     UIView* view = [[UIView alloc]initWithFrame:rect];
-//    self.view = view;
+    self.view = view;
     
     int width = rect.size.width > rect.size.height ? rect.size.width : rect.size.height;
     int height = rect.size.width > rect.size.height ? rect.size.height : rect.size.width;
-//    glView = [[EAGLView alloc]initWithFrame:CGRectMake(0, 0, width, height)];
-    glView = [[EAGLView alloc]initWithFrame:rect];
+   
     controlView = [[EmuControllerView alloc]initWithFrame:rect];
-//    [controlView addEmuWindow:glView];
+    [controlView addEmuWindow:glView];
+#endif
     
+    glView = [[EAGLView alloc]initWithFrame:rect];
 //    [self.view addSubview:controlView];
     self.view  = glView;
 }
@@ -70,13 +73,15 @@
 -(void)viewDidLoad
 {
     [super viewDidLoad];
-        
+    
+#ifdef USE_IOS_JOYSTICK
     currentOrientation = UIInterfaceOrientationLandscapeLeft;
     CGSize size = [UIScreen mainScreen].bounds.size;
     int width = size.width > size.height ? size.width : size.height;
     int height = size.width > size.height ? size.height : size.width;
     controlView.frame = CGRectMake(0, 0, width, height);
     [controlView changeUI:currentOrientation];
+#endif
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showSettingPopup) name:@"showsetting" object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appActivatedDidFinish:) name:kDJAppActivateDidFinish object:nil];
@@ -114,6 +119,7 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
 {
     [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
     
+#ifdef USE_IOS_JOYSTICK
     if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft) {
         currentOrientation = UIInterfaceOrientationLandscapeRight;
         
@@ -131,6 +137,7 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
         controlView.frame = CGRectMake(0, 0, width, height);
         [controlView changeUI:UIInterfaceOrientationLandscapeLeft];
     }
+#endif
     
 //    uint o = iOSOrientationToGfx([UIDevice currentDevice].orientation);
     //uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
