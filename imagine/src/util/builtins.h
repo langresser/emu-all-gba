@@ -15,7 +15,8 @@
 #define EVISIBLE __attribute__((externally_visible))
 
 // Shortcut for GCC attributes
-#define ATTRS(...) __attribute__((__VA_ARGS__))
+//#define ATTRS(...) __attribute__((__VA_ARGS__))
+#define ATTRS(...)
 
 #define INITFIRST __attribute__((init_priority(101)))
 

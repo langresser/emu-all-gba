@@ -43,7 +43,7 @@ namespace Base
 #endif
 
 static bool triggerGfxResize = 0;
-static Window mainWin, currWin;
+static Window mainWin;
 bool gfxUpdate = 0;
 static void generic_displayNeedsUpdate()
 {
@@ -60,12 +60,9 @@ const Window &window()
 static int generic_resizeEvent(const Window &win, bool force = 0)
 {
 	// do gfx_resizeDisplay only if the window-size changed
-	if(force || currWin != win)
+	if(force || mainWin != win)
 	{
-		logMsg("resizing display area %d:%d:%d:%d -> %d:%d:%d:%d",
-				currWin.rect.x, currWin.rect.y, currWin.rect.x2, currWin.rect.y2,
-				win.rect.x, win.rect.y, win.rect.x2, win.rect.y2);
-		currWin = win;
+		mainWin = win;
 		triggerGfxResize = 1;
 		gfxUpdate = 1;
 		return 1;
@@ -96,7 +93,6 @@ static void engineInit()
 	mem_init();
 	
 	#ifdef CONFIG_GFX
-		currWin = mainWin;
 		doOrExit(Gfx::setOutputVideoMode(mainWin));
 	#endif
 
@@ -116,7 +112,7 @@ static uint runEngine()
 	#ifdef CONFIG_GFX
 	if(unlikely(triggerGfxResize))
 	{
-		Gfx::resizeDisplay(currWin);
+		Gfx::resizeDisplay(mainWin);
 		triggerGfxResize = 0;
 	}
 	#endif
@@ -159,23 +155,6 @@ static void processAppMsg(int type, int shortArg, int intArg, int intArg2)
 	switch(type)
 	{
 		#if defined CONFIG_BLUEZ || defined CONFIG_ANDROIDBT
-		/*case MSG_INPUT:
-		{
-			Input::onInputEvent(InputEvent(shortArg, intArg & 0xFFFF, intArg2, intArg >> 16));
-		}
-		break;
-		case MSG_INPUTDEV_CHANGE:
-		{
-			logMsg("got input dev change message");
-			onInputDevChange((InputDevChange){ (uint)intArg2, (uint)intArg, (uint)shortArg });
-		}
-		break;*/
-		/*case MSG_BT:
-		{
-			logMsg("got bluetooth connect message");
-			//Bluetooth::connectFunc(intArg);
-		}
-		break;*/
 		bcase MSG_BT_SCAN_STATUS_DELEGATE:
 		{
 			logMsg("got bluetooth adapter status delegate message");
@@ -189,16 +168,6 @@ static void processAppMsg(int type, int shortArg, int intArg, int intArg2)
 			s->onStatusDelegate().invoke(*s, intArg);
 		}
 		#endif
-		#endif
-		#if CONFIG_ENV_WEBOS_OS >= 3
-		bcase MSG_ORIENTATION_CHANGE:
-		{
-			logMsg("got orientation change message");
-			uint o = shortArg;
-			logMsg("new orientation %s", Gfx::orientationName(o));
-			Gfx::preferedOrientation = o;
-			Gfx::setOrientation(Gfx::preferedOrientation);
-		}
 		#endif
 		bdefault:
 		{

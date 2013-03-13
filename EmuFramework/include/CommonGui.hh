@@ -995,12 +995,11 @@ static void mainInitWindowCommon(const Gfx::LGradientStopDesc (&navViewGrad)[NAV
 		Base::setDPI(optionDPI);
 	setupFont();
 	popup.init();
-	#ifdef CONFIG_BASE_ANDROID
+
 	vController.init((int)optionTouchCtrlAlpha / 255.0, Gfx::xMMSize(int(optionTouchCtrlSize) / 100.));
 	updateVControlImg();
 	resolveOnScreenCollisions();
 	setupVControllerPosition();
-	#endif
 
 	menuIcon.init(getArrowAsset());
 

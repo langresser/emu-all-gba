@@ -144,7 +144,6 @@ uint appState = APP_RUNNING;
         mainWin.rect.y2 *= 2;
         mainWin.w *= 2;
         mainWin.h *= 2;
-        currWin = mainWin;
     }
 
 	self.multipleTouchEnabled = YES;
@@ -382,7 +381,6 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 	Gfx::viewMMWidth_ = roundf((mainWin.w / (float)unscaledDPI) * 25.4);
 	Gfx::viewMMHeight_ = roundf((mainWin.h / (float)unscaledDPI) * 25.4);
 	logMsg("set screen MM size %dx%d", Gfx::viewMMWidth_, Gfx::viewMMHeight_);
-	currWin = mainWin;
 	
 	doOrExit(onInit(0, nullptr)); // TODO: args
     
@@ -393,9 +391,8 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
     
 	Base::engineInit();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	Base::setAutoOrientation(1);
     
-    [emuGameVC showGameList];
+//    [emuGameVC showGameList];
     
     [MobClick startWithAppkey:kUMengAppKey];
     [[DianJinOfferPlatform defaultPlatform] setAppId:kDianjinAppKey andSetAppKey:kDianjinAppSecrect];
@@ -572,7 +569,6 @@ void setAutoOrientation(bool on)
 		[[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
 	else
 	{
-		Gfx::preferedOrientation = Gfx::rotateView;
 		[[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
 	}
 }

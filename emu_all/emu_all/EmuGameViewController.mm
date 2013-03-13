@@ -54,8 +54,11 @@
 {
     CGRect rect = [[UIScreen mainScreen] bounds];
     UIView* view = [[UIView alloc]initWithFrame:rect];
-    self.view = view;
+//    self.view = view;
     
+    int width = rect.size.width > rect.size.height ? rect.size.width : rect.size.height;
+    int height = rect.size.width > rect.size.height ? rect.size.height : rect.size.width;
+//    glView = [[EAGLView alloc]initWithFrame:CGRectMake(0, 0, width, height)];
     glView = [[EAGLView alloc]initWithFrame:rect];
     controlView = [[EmuControllerView alloc]initWithFrame:rect];
 //    [controlView addEmuWindow:glView];
@@ -75,7 +78,7 @@
     controlView.frame = CGRectMake(0, 0, width, height);
     [controlView changeUI:currentOrientation];
     
-    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(showSettingPopup) name:@"showsetting" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showSettingPopup) name:@"showsetting" object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appActivatedDidFinish:) name:kDJAppActivateDidFinish object:nil];
 }
 
@@ -107,19 +110,6 @@ static uint iOSInterfaceOrientationToGfx(UIInterfaceOrientation orientation)
 	}
 }
 
-static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
-{
-	switch(orientation)
-	{
-		case UIDeviceOrientationPortrait: return Gfx::VIEW_ROTATE_0;
-		case UIDeviceOrientationLandscapeLeft: return Gfx::VIEW_ROTATE_90;
-		case UIDeviceOrientationLandscapeRight: return Gfx::VIEW_ROTATE_270;
-		case UIDeviceOrientationPortraitUpsideDown: return Gfx::VIEW_ROTATE_180;
-		default : return 255; // TODO: handle Face-up/down
-	}
-}
-
-
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
     [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
@@ -142,10 +132,10 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
         [controlView changeUI:UIInterfaceOrientationLandscapeLeft];
     }
     
-    uint o = iOSOrientationToGfx([UIDevice currentDevice].orientation);
+//    uint o = iOSOrientationToGfx([UIDevice currentDevice].orientation);
     //uint o = iOSInterfaceOrientationToGfx(toInterfaceOrientation);
-	Gfx::preferedOrientation = o;
-	Gfx::setOrientation(Gfx::preferedOrientation);
+//	Gfx::preferedOrientation = o;
+//	Gfx::setOrientation(Gfx::preferedOrientation);
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -154,13 +144,13 @@ static uint iOSOrientationToGfx(UIDeviceOrientation orientation)
 
 - (BOOL)shouldAutorotate
 {
-    return YES;
+    return NO;
 }
 
 - (NSUInteger)supportedInterfaceOrientations
 {
-    return UIInterfaceOrientationMaskAll;
-    //return UIInterfaceOrientationMaskLandscape;
+    //return UIInterfaceOrientationMaskAll;
+    return UIInterfaceOrientationMaskLandscape;
 }
 
 -(void)showSetting:(NSNotification*)notify
