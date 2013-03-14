@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.h>
+#include <config/config.h>
 #include <config/imagineTypes.h>
 #include <stdarg.h>
 #include <util/ansiTypes.h>

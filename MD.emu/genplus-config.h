@@ -39,5 +39,5 @@ struct t_config
   uint8 lock_on;
   uint8 hot_swap;
   uint8 romtype;
-  t_input_config input[MAX_INPUTS];
+  struct t_input_config input[MAX_INPUTS];
 };

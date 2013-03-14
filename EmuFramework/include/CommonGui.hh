@@ -917,7 +917,14 @@ TouchConfigView tcMenu(touchConfigFaceBtnName, touchConfigCenterBtnName);
 
 #include <MenuView.hh>
 
+#ifdef EMU_GBA
 #include <main/EmuMenuViews_GBA.hh>
+#endif
+
+#ifdef EMU_MD
+#include <main/EmuMenuViews_MD.hh>
+#endif
+
 static SystemOptionView oCategoryMenu;
 static SystemMenuView mMenu;
 

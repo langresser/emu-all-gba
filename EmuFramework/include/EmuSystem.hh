@@ -66,7 +66,7 @@ class EmuSystem
 	static void initOptions();
 	static void writeConfig(Io *io);
 	static bool readConfig(Io *io, uint key, uint readSize);
-	static int loadGame(const char *path, bool userrom = false);
+	static int loadGame(const char *path, bool userrom = true);
 	typedef Delegate<void (uint result, const Input::Event &e)> LoadGameCompleteDelegate;
 	static LoadGameCompleteDelegate loadGameCompleteDel;
 	static LoadGameCompleteDelegate &loadGameCompleteDelegate() { return loadGameCompleteDel; }
@@ -170,4 +170,11 @@ static const char *stateNameStr(int slot)
 
 #include <CreditsView.hh>
 #include <inGameActionKeys.hh>
+
+#ifdef EMU_GBA
 #include "EmuConfig_GBA.hh"
+#endif
+
+#ifdef EMU_MD
+#include "EmuConfig_MD.hh"
+#endif

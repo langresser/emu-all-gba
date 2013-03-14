@@ -46,7 +46,7 @@ extern void gen_zreset_w(unsigned int state, unsigned int cycles);
 extern void gen_zbank_w(unsigned int state);
 static int z80_irq_callback(int param);
 
-#include <m68k/m68k.h>
+#include "m68k.h"
 extern M68KCPU mm68k;
 
 #endif /* _GEN_H_ */

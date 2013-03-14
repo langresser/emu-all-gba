@@ -1,6 +1,6 @@
 #define thisModuleName "fileio"
 #include "shared.h"
-#include <unzip.h>
+#include "unzip.h"
 #include <io/sys.hh>
 
 uint isROMExtension(const char *name);

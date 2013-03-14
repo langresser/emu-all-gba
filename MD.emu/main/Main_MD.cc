@@ -41,7 +41,7 @@
 #ifndef NO_SCD
 #include <scd/scd.h>
 #endif
-#include <main/Cheats.hh>
+#include "Cheats_MD.hh"
 
 t_config config = { 0 };
 uint config_ym2413_enabled = 1;
@@ -627,7 +627,7 @@ static uint detectISORegion(uint8 bootSector[0x800])
 		return REGION_JAPAN_NTSC;
 }
 
-int EmuSystem::loadGame(const char *path)
+int EmuSystem::loadGame(const char *path, bool isuserrom)
 {
 	closeGame();
 	emuView.initImage(0, mdResX, mdResY);
@@ -650,7 +650,7 @@ int EmuSystem::loadGame(const char *path)
 	}
 	else
 	#endif
-		setupGamePaths(path);
+		setupGamePaths(path, isuserrom);
 	#ifndef NO_SCD
 	CDAccess *cd = nullptr;
 	if(isMDCDExtension(fullGamePath) ||

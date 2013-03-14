@@ -174,12 +174,11 @@ void m68k_write_memory_32(unsigned int address, unsigned int value);
 
 struct _m68k_memory_map
 {
-	constexpr _m68k_memory_map() { }
-  unsigned char *base = nullptr;
-  unsigned int (*read8)(unsigned int address) = nullptr;
-  unsigned int (*read16)(unsigned int address) = nullptr;
-  void (*write8)(unsigned int address, unsigned int data) = nullptr;
-  void (*write16)(unsigned int address, unsigned int data) = nullptr;
+  unsigned char *base;
+  unsigned int (*read8)(unsigned int address);
+  unsigned int (*read16)(unsigned int address);
+  void (*write8)(unsigned int address, unsigned int data);
+  void (*write16)(unsigned int address, unsigned int data);
 };
 
 /* Special call to simulate undocumented 68k behavior when move.l with a
@@ -199,7 +198,7 @@ typedef union
 
 struct M68KCPU
 {
-	constexpr M68KCPU(const unsigned char (&cycles)[0x10000], bool hasWorkingTas):
+	M68KCPU(const unsigned char (&cycles)[0x10000], bool hasWorkingTas):
 		cycles(cycles), hasWorkingTas(hasWorkingTas) { }
 
   static const uint cpu_type = 1;     /* CPU Type: 68000, 68008, 68010, 68EC020, or 68020 */

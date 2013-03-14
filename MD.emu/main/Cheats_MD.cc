@@ -13,7 +13,7 @@
 	You should have received a copy of the GNU General Public License
 	along with MD.emu.  If not, see <http://www.gnu.org/licenses/> */
 
-#include <main/Cheats.hh>
+#include "Cheats_MD.hh"
 #include <io/sys.hh>
 #include <EmuSystem.hh>
 #include "system.h"

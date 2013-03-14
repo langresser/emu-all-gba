@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.h>
+#include <config/config.h>
 #include <stddef.h>
 #include <util/ansiTypes.h>
 #include <assert.h>

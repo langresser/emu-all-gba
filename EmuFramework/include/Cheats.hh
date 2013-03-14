@@ -1,4 +1,5 @@
 #pragma once
+#include "util/gui/BaseMenuView.hh"
 
 class BaseCheatsView : public BaseMenuView
 {

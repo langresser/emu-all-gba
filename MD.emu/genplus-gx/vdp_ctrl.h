@@ -24,7 +24,7 @@
 #ifndef _VDP_H_
 #define _VDP_H_
 
-#include <m68k/m68k.h>
+#include "m68k.h"
 #include <assert.h>
 
 template <uint S>

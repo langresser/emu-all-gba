@@ -23,12 +23,6 @@
 // Imagine
 #import "config.h"
 
-// MD.emu
-#define LSB_FIRST
-#define NO_SCD
-#define NO_SYSTEM_PICO
-#define SUPPORT_16BPP_RENDER
-
 //#define USE_IOS_JOYSTICK
 
 #ifdef GBA_SRW
@@ -38,3 +32,8 @@
 #define kDianjinAppSecrect @"b46da6977eaf1861438e8cfd799a4fce"
 #define kMangoAppKey @"0a6d56311af3494f8f3ce4e423269ab2"
 #endif
+
+
+
+
+#define EMU_MD
