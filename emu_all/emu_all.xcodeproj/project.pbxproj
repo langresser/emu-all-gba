@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8513C2B716F1B0600085F42E /* liblibMD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 852A78EE16F19A5B001BEA56 /* liblibMD.a */; };
+		8517EF2B16F1E9010079D232 /* liblibGBA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 852A77F716F18D07001BEA56 /* liblibGBA.a */; };
 		853BDE1F16F0539400F4A001 /* ButtonConfigView.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB134516E65A8F00B8D346 /* ButtonConfigView.cc */; };
 		853BDE2016F0539400F4A001 /* ConfigFile.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB134616E65A8F00B8D346 /* ConfigFile.cc */; };
 		853BDE2116F0539400F4A001 /* CreditsView.cc in Sources */ = {isa = PBXBuildFile; fileRef = 17DB134716E65A8F00B8D346 /* CreditsView.cc */; };
@@ -711,7 +711,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8513C2B716F1B0600085F42E /* liblibMD.a in Frameworks */,
+				8517EF2B16F1E9010079D232 /* liblibGBA.a in Frameworks */,
 				853BDEA116F0539400F4A001 /* SystemConfiguration.framework in Frameworks */,
 				853BDEA216F0539400F4A001 /* MobileCoreServices.framework in Frameworks */,
 				853BDEA316F0539400F4A001 /* CoreTelephony.framework in Frameworks */,

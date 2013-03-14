@@ -36,4 +36,5 @@
 
 
 
-#define EMU_MD
+//#define EMU_MD
+#define EMU_GBA
