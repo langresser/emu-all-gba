@@ -462,7 +462,7 @@ bool BufferImage::setupTexture(Pixmap &pix, bool upload, uint internalFormat, in
 	{
 		GLenum format = pixelFormatToOGLFormat(pix.format);
 		GLenum dataType = pixelFormatToOGLDataType(pix.format);
-		logMsg("%s texture %dx%d with internal format %s from image %s:%s", upload ? "uploading" : "creating", pix.x, pix.y, glImageFormatToString(internalFormat), glImageFormatToString(format), glDataTypeToString(dataType));
+//		logMsg("%s texture %dx%d with internal format %s from image %s:%s", upload ? "uploading" : "creating", pix.x, pix.y, glImageFormatToString(internalFormat), glImageFormatToString(format), glDataTypeToString(dataType));
 	}
 	if(replaceGLTexture(pix, upload, internalFormat, includePadding, texTarget))
 	{

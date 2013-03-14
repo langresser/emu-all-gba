@@ -61,23 +61,6 @@ static void audioCallback(void *userdata, AudioQueueRef inQ, AudioQueueBufferRef
 	buffersQueuedLock.lock();
 	buffersQueued--;
 	assert(buffersQueued < buffers);
-	/*bytesQueued -= outQB->mAudioDataByteSize;
-	assert(bytesQueued < maxBytesQueued);
-	AudioTimeStamp nowTimestamp;
-	AudioQueueGetCurrentTime(inQ, 0, &nowTimestamp, 0);
-	int nsLatency = float(lastTimestamp.mHostTime - nowTimestamp.mHostTime) * timestampNanosecScaler;
-	static int debugCount = 0;
-	if(countToValueLooped(debugCount, 30))
-	{
-		//logMsg("buffer queue down to %d, last buffer with %d bytes, total %d, time %u", buffersQueued, (int)outQB->mAudioDataByteSize, bytesQueued, nsLatency);
-		logMsg("buffer queue down to %d, last buffer with %d bytes, total %d, time %u", buffersQueued, (int)outQB->mAudioDataByteSize, bytesQueued);
-	}*/
-	/*if(nsLatency < 40000000 || bytesQueued <= pcmFormat.framesToBytes(bufferFrames))
-	{
-		logMsg("xrun, only %u ns of buffer, %d bytes queued", nsLatency, bytesQueued);
-		AudioQueuePause(inQ);
-		isPlaying = 0;
-	}*/
 	buffersQueuedLock.unlock();
 }
 
